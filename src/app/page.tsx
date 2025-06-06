@@ -3,16 +3,26 @@
 import { useAuth } from "@/hooks/useAuth";
 import Navigation from "@/components/Navigation";
 import CloudinaryTest from "@/components/CloudinaryTest";
+import { useEffect, useState } from "react";
 
 export default function Home() {
   const { authenticated, permission, loading } = useAuth();
+  const [mounted, setMounted] = useState(false);
 
-  if (loading) {
+  // Prevent hydration mismatch and content flash
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Show loading state until component is mounted and auth is resolved
+  if (!mounted || loading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Navigation />
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+        <div className="flex items-center justify-center h-screen">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading...</p>
+          </div>
         </div>
       </div>
     );
@@ -20,7 +30,15 @@ export default function Home() {
 
   if (!authenticated) {
     // This shouldn't happen due to middleware, but just in case
-    return null;
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="flex items-center justify-center h-screen">
+          <div className="text-center">
+            <p className="text-gray-600">Redirecting to login...</p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (

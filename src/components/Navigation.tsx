@@ -2,19 +2,25 @@
 
 import { useAuth } from '@/hooks/useAuth';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 
 export default function Navigation() {
   const { authenticated, permission, logout, hasUploadPermission, loading } = useAuth();
+  const [mounted, setMounted] = useState(false);
 
-  if (loading) {
+  // Prevent hydration mismatch
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Don't render anything until mounted and auth is resolved
+  if (!mounted || loading) {
     return (
       <nav className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
-              <h1 className="text-xl font-semibold text-gray-900">
-                Team Todd Photo Gallery
-              </h1>
+              <div className="animate-pulse bg-gray-200 h-6 w-48 rounded"></div>
             </div>
             <div className="flex items-center">
               <div className="animate-pulse bg-gray-200 h-8 w-20 rounded"></div>

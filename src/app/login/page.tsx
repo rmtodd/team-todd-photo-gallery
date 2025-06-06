@@ -16,6 +16,8 @@ function LoginForm() {
       setError('You need upload permissions to access that page.');
     } else if (errorParam === 'invalid_token') {
       setError('Your session has expired. Please log in again.');
+    } else if (errorParam === 'session_expired') {
+      setError('Your session has expired. Please log in again.');
     }
   }, [searchParams]);
 
