@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 
 interface AuthState {
@@ -9,7 +9,16 @@ interface AuthState {
   loading: boolean;
 }
 
-export function useAuth() {
+interface AuthContextType extends AuthState {
+  logout: () => Promise<void>;
+  hasUploadPermission: () => boolean;
+  hasViewPermission: () => boolean;
+  checkAuthStatus: () => Promise<void>;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [authState, setAuthState] = useState<AuthState>({
     authenticated: false,
     permission: null,
@@ -70,11 +79,25 @@ export function useAuth() {
     return authState.authenticated && (authState.permission === 'upload' || authState.permission === 'view');
   };
 
-  return {
+  const value: AuthContextType = {
     ...authState,
     logout,
     hasUploadPermission,
     hasViewPermission,
     checkAuthStatus,
   };
+
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
 } 
