@@ -1,0 +1,447 @@
+# Product Requirements Document (PRD)
+
+## Next.js Family Photo Gallery
+
+### Document Information
+
+- **Product Name**: Team-Todd-Photo-Gallery
+- **Version**: 1.0
+- **Date**: June 2025
+- **Author**: R.Todd/Dad
+- **Status**: Draft
+
+---
+
+## 1. Executive Summary
+
+### 1.1 Product Vision
+
+Create a fast, user-friendly, and private photo gallery web application for couples to easily upload, organize, and share their family memories. The application prioritizes mobile-first design, exceptional performance, and simplicity for non-technical users. User interface should be clean and minimalistic. 
+
+### 1.2 Problem Statement
+
+Current photo storage solutions (Google Photos, iCloud, etc.) are often complex, expensive at scale, or lack the privacy and customization families desire. Technical barriers prevent many couples from creating their own photo sharing solution, despite having thousands of precious memories to organize and share with loved ones.
+
+### 1.3 Solution Overview
+
+A Next.js-based progressive web application that combines the convenience of cloud photo services with the privacy and control of self-hosted solutions. The gallery will feature infinite scrolling, mobile-optimized uploads, and lightning-fast performance even with thousands of photos.
+
+---
+
+## 2. Goals and Objectives
+
+### 2.1 Primary Goals
+
+1. **Performance Excellence**: Achieve 90+ Lighthouse scores across all metrics
+2. **User-Friendly Upload**: Enable photo uploads from mobile devices with minimal friction
+3. **Scalable Architecture**: Support 10,000+ photos without performance degradation
+4. **Privacy-First**: Provide password protection and secure photo storage
+
+### 2.2 Success Metrics
+
+- Time to First Contentful Paint: < 1.5 seconds
+- Time to Interactive: < 3.5 seconds
+- User upload completion rate: > 95%
+- Photo load time: < 200ms per image
+- Mobile usability score: 100/100
+
+### 2.3 Non-Goals
+
+- Social media features (likes, comments, sharing)
+- Advanced photo editing capabilities
+- Video storage and playback (Phase 1)
+- Multi-user account management
+
+---
+
+## 3. User Personas
+
+### 3.1 Primary Users
+
+Persona 1: Tech-Savvy Partner
+- **Name**: Alex (30-35 years old)
+- **Technical Level**: Comfortable with technology
+- **Goals**: Quick photo uploads, organize memories, share with family
+- **Pain Points**: Current solutions are expensive or lack privacy
+- **Device Usage**: 30% mobile, 70% desktop
+
+Persona 2: Non-Technical Partner
+- **Name**: Jamie (28-33 years old)
+- **Technical Level**: Basic smartphone user
+- **Goals**: View photos easily, share specific photos with family
+- **Pain Points**: Complex interfaces, difficulty finding photos
+- **Device Usage**: 95% mobile, 5% desktop
+
+### 3.2 Secondary Users
+
+Extended Family Members
+- **Age Range**: 25-70 years old
+- **Technical Level**: Varies widely
+- **Goals**: View family photos without creating accounts
+- **Device Usage**: Primarily mobile devices
+
+---
+
+## 4. Features and Requirements
+
+### 4.1 Core Features (Phase 1)
+
+4.1.1 Photo Gallery Display
+- **Responsive Grid Layout**
+  - Masonry-style photo grid with white background 
+  - Adaptive columns based on screen size
+  - Smooth transitions and animations
+- **Infinite Scrolling**
+  - Load 20-30 photos at a time
+  - Seamless loading with no page refreshes
+  - Loading indicators for better UX
+  - Virtual scrolling for performance
+- **Photo Modal View**
+  - Full-screen photo viewing
+  - Swipe gestures for navigation
+  - Pinch-to-zoom functionality
+  - Maintain scroll position on close
+
+4.1.2 Upload System
+- **Cloudinary Upload Widget**
+  - Production-ready, mobile-optimized interface
+  - Zero custom upload UI development needed
+  - Built-in features:
+    - Multi-file selection
+    - Drag-and-drop on desktop
+    - Progress indicators
+    - Error handling and retry
+    - File type validation
+
+  **Upload Sources (Native Widget Support)**
+  - Local device (camera roll, file system)
+  - Camera capture (mobile)
+  - URL upload
+  - Google Drive
+  - Dropbox
+  - Instagram
+  - Shutterstock
+  - Getty Images
+  - Unsplash
+
+  **Automatic Processing**
+  - Format conversion (HEIC to JPEG)
+  - Auto-orientation fix
+  - Metadata preservation
+  - Virus scanning
+  - Duplicate detection
+
+4.1.3 Performance Optimization
+- **Image Optimization**
+  - Multiple resolution variants
+  - WebP/AVIF format delivery
+  - Lazy loading with placeholders
+  - Progressive enhancement
+- **Caching Strategy**
+  - Service worker implementation
+  - Offline viewing capability
+  - Smart prefetching
+  - CDN integration
+
+### 4.2 Technical Requirements
+
+4.2.1 Frontend Architecture
+- **Framework**: Next.js 14+ with App Router
+- **Styling**: Tailwind CSS
+- **State Management**: React Context + SWR
+- **UI Components**: 
+  - React Photo Album for gallery
+  - Custom modal implementation
+  - Framer Motion for animations
+
+4.2.2 Backend Services
+- **Image Storage**: Cloudinary (primary choice for superior features)
+- **Database**: None - leveraging Cloudinary’s metadata and folder features
+- **Authentication**: Environment variable-based simple password protection
+- **CDN**: Cloudinary’s integrated CDN with 100+ global locations
+
+4.2.3 Development Standards
+- **Code Quality**
+  - TypeScript for type safety
+  - ESLint + Prettier configuration
+  - Husky pre-commit hooks
+  - Jest/React Testing Library
+- **Performance Budget**
+  - JavaScript bundle: < 200KB gzipped
+  - CSS: < 50KB
+  - Initial load: < 3 seconds on 3G
+  - Image loading: < 200ms
+
+### 4.3 Simplified Architecture Benefits
+
+4.3.1 Why Cloudinary
+- **All-in-One Solution**: Storage, CDN, and transformations in one service
+- **AI-Powered Features**: Automatic tagging, face detection, quality optimization
+- **Upload Widget**: Production-ready, mobile-optimized upload interface
+- **Real-time Transformations**: On-the-fly image optimization and format conversion
+- **Metadata Storage**: Built-in support for custom metadata (no separate DB needed)
+- **Folder Organization**: Native folder structure for albums/collections
+
+4.3.2 Simple Authentication Approach
+- **Password Protection**: Single shared password for family access
+- **Environment Variables**: Secure storage of passwords in Vercel
+- **Session Management**: Browser-based sessions using encrypted cookies
+- **No User Management**: Simplified experience, no accounts needed
+
+4.3.3 Cost Optimization
+- **Cloudinary Free Tier**: 25GB storage, 25GB bandwidth/month
+- **Smart Transformations**: Only create variants when requested
+- **Bandwidth Optimization**: Automatic format selection (WebP/AVIF)
+- **No Database Costs**: Eliminated Supabase/database expenses
+
+---
+
+## 5. User Experience Design
+
+### 5.1 Design Principles
+
+1. **Mobile-First**: Every feature designed for touch interfaces
+2. **Minimal Cognitive Load**: Intuitive navigation, clear actions
+3. **Fast Feedback**: Immediate response to all user actions
+4. **Progressive Disclosure**: Advanced features hidden by default
+
+### 5.2 User Flows
+
+5.2.1 Upload Flow
+1. User taps upload button
+2. Selects upload source (camera/library)
+3. Chooses multiple photos
+4. Sees upload progress
+5. Photos appear in gallery immediately
+
+5.2.2 Viewing Flow
+1. User opens gallery
+2. Scrolls through photos (infinite scroll)
+3. Taps photo for full view
+4. Swipes between photos
+5. Returns to gallery at same position
+
+### 5.3 Accessibility Requirements
+
+- WCAG 2.1 AA compliance
+- Keyboard navigation support
+- Screen reader compatibility
+- Focus indicators
+
+---
+
+## 6. Technical Architecture
+
+### 6.1 System Architecture
+
+```
+┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
+│   Next.js App   │────▶│   Cloudinary     │────▶│  Cloudinary     │
+│   (Vercel)      │     │      API         │     │  Global CDN     │
+└─────────────────┘     └──────────────────┘     └─────────────────┘
+         │                        │
+         │                        │
+         ▼                        ▼
+┌─────────────────┐     ┌──────────────────┐
+│  Local Storage  │     │  Cloudinary      │
+│  (Preferences)  │     │  Storage & DB    │
+└─────────────────┘     └──────────────────┘
+```
+
+### 6.2 Data Models
+
+Photo Model (Stored in Cloudinary)
+
+```typescript
+interface CloudinaryPhoto {
+  public_id: string;
+  secure_url: string;
+  folder: string;
+  format: string;
+  width: number;
+  height: number;
+  created_at: string;
+  context: {
+    custom: {
+      uploadedBy: 'husband' | 'wife';
+      album?: string;
+      caption?: string;
+    }
+  };
+  derived: {
+    thumbnail: string;   // 400px width
+    display: string;     // 1200px width
+    fullsize: string;    // 2560px width
+  };
+}
+```
+
+Authentication Model
+
+```typescript
+// Simple environment-based auth
+interface AuthConfig {
+  UPLOAD_PASSWORD: string;      // For upload access
+  GALLERY_PASSWORD: string;     // For viewing access
+  SESSION_DURATION: number;     // Hours before re-auth
+}
+```
+
+### 6.3 API Design
+
+- RESTful API endpoints
+- GraphQL for complex queries (future)
+- Webhook integration for processing
+- Rate limiting and security
+
+---
+
+## 7. Security and Privacy
+
+### 7.1 Security Requirements
+
+- HTTPS everywhere
+- Two types of users:
+  - Password 1 (shared between husband and wife): upload and view capabilities 
+  - Password 2 (shared amongst family and friends): view capabilties only
+- Signed Cloudinary URLs for image access
+- Environment variable storage for sensitive data
+- Rate limiting on upload endpoints
+- CORS configuration for Cloudinary
+
+### 7.2 Privacy Features
+
+- No public access - password required
+- Will incorporate analytics at future date (plausible, posthog, etc)
+- EXIF data handling per user preference
+- No social features or public sharing
+- Family-only access model
+
+---
+
+## 8. Development Roadmap
+
+### 8.1 Phase 1: MVP (Weeks 1-6)
+
+- **Week 1-2**: Project setup and infrastructure 
+  - Next.js configuration with App Router
+  - Cloudinary account setup and API integration
+  - Simple password authentication system
+  - Basic folder structure in Cloudinary
+- **Week 3-4**: Core gallery features 
+  - Photo grid with React Photo Album
+  - Infinite scrolling with Cloudinary pagination
+  - Modal viewer with gesture support
+  - Cloudinary transformation presets
+- **Week 5-6**: Upload system 
+  - Cloudinary Upload Widget integration
+  - Mobile-optimized configuration
+  - Progress tracking and error handling
+  - Automatic image optimization setup
+
+### 8.2 Phase 2: Enhancement (Weeks 7-10)
+
+- **Week 7-8**: Performance optimization 
+  - Image optimization pipeline
+  - Service worker implementation
+  - CDN configuration
+- **Week 9-10**: Polish and testing 
+  - Cross-browser testing
+  - Performance tuning
+  - User acceptance testing
+
+### 8.3 Phase 3: Advanced Features (Future)
+
+- Album organization
+- Sharing capabilities
+- Search functionality
+- Video support
+
+---
+
+## 9. Risks and Mitigation
+
+### 9.1 Technical Risks
+
+RiskImpactProbabilityMitigationPerformance degradation at scaleHighMediumImplement virtualization earlyMobile browser compatibilityMediumLowTest on real devices regularlyStorage costs exceeding budgetMediumMediumMonitor usage, implement quotas
+
+### 9.2 User Adoption Risks
+
+RiskImpactProbabilityMitigationComplex upload processHighMediumExtensive user testingSlow photo loadingHighLowAggressive optimizationPrivacy concernsMediumLowClear privacy policy
+
+---
+
+## 10. Testing Strategy
+
+### 10.1 Testing Types
+
+- **Unit Testing**: Jest + React Testing Library
+- **Integration Testing**: Cypress
+- **Performance Testing**: Lighthouse CI
+- **Accessibility Testing**: axe-core
+- **User Testing**: Family member feedback
+
+### 10.2 Acceptance Criteria
+
+- All Lighthouse scores > 90
+- Upload success rate > 95%
+- Photo load time < 200ms
+- Zero critical accessibility issues
+- Positive feedback from test users
+
+---
+
+## 11. Launch Strategy
+
+### 11.1 Beta Launch
+
+- Deploy to family members first
+- Gather feedback for 2 weeks
+- Iterate based on usage patterns
+- Fix critical issues
+
+### 11.2 Production Launch
+
+- Gradual rollout to extended family
+- Monitor performance metrics
+- Implement feedback quickly
+- Plan for scaling
+
+---
+
+## 12. Maintenance and Support
+
+### 12.1 Ongoing Maintenance
+
+- Monthly security updates
+- Performance monitoring
+- Storage usage tracking
+- User feedback collection
+
+### 12.2 Support Strategy
+
+- Self-service documentation
+- Video tutorials for common tasks
+- Email support for critical issues
+- Feature request tracking
+
+---
+
+## Appendices
+
+### A. Technology Stack Summary
+
+- **Frontend**: Next.js 14+, React 18, TypeScript
+- **Styling**: Tailwind CSS, Framer Motion
+- **State**: React Context, SWR
+- **Image Service**: Cloudinary (storage, CDN, transformations)
+- **Authentication**: Simple password via environment variables
+- **Session Storage**: Encrypted cookies
+- **Hosting**: Vercel
+- **Monitoring**: Vercel Analytics
+
+### B. Reference Applications
+
+- Google Photos (UX inspiration)
+- Pinterest (grid layout)
+- Instagram (upload flow)
