@@ -1,0 +1,53 @@
+# Task ID: 3
+# Title: Authentication System Implementation
+# Status: done
+# Dependencies: 1
+# Priority: high
+# Description: Implement a simple password-based authentication system with two access levels: upload+view and view-only.
+# Details:
+1. Add authentication environment variables to .env.local:
+```
+UPLOAD_PASSWORD=secure_password_for_couple
+GALLERY_PASSWORD=password_for_family_viewing
+SESSION_DURATION=168
+```
+2. Create authentication middleware in middleware.ts:
+```typescript
+import { NextRequest, NextResponse } from 'next/server';
+
+export function middleware(request: NextRequest) {
+  const authCookie = request.cookies.get('auth-token');
+  const path = request.nextUrl.pathname;
+  
+  // Allow access to login page
+  if (path === '/login') {
+    return NextResponse.next();
+  }
+  
+  // Check for upload paths
+  if (path.startsWith('/upload') && authCookie?.value !== process.env.UPLOAD_PASSWORD) {
+    return NextResponse.redirect(new URL('/login?from=upload', request.url));
+  }
+  
+  // Check for gallery access
+  if (!authCookie?.value) {
+    return NextResponse.redirect(new URL('/login', request.url));
+  }
+  
+  return NextResponse.next();
+}
+
+export const config = {
+  matcher: ['/((?!api|_next/static|favicon.ico).*)'],
+};
+```
+3. Create login page in app/login/page.tsx with form for password entry
+4. Implement login API route in app/api/auth/route.ts to set encrypted cookies
+5. Add session management with expiration based on SESSION_DURATION
+
+# Test Strategy:
+1. Test login with correct and incorrect passwords
+2. Verify upload access is restricted to users with UPLOAD_PASSWORD
+3. Confirm view-only access works with GALLERY_PASSWORD
+4. Test session expiration after configured duration
+5. Ensure redirects work correctly for protected routes

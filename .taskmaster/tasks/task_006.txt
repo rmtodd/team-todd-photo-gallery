@@ -1,0 +1,151 @@
+# Task ID: 6
+# Title: Cloudinary Upload Widget Integration
+# Status: pending
+# Dependencies: 2, 3
+# Priority: high
+# Description: Integrate Cloudinary Upload Widget for mobile-optimized photo uploads with support for multiple sources.
+# Details:
+1. Create UploadWidget component in components/UploadWidget.tsx:
+```typescript
+import React, { useEffect, useRef } from 'react';
+
+interface UploadWidgetProps {
+  onSuccess?: (result: any) => void;
+  onFailure?: (error: any) => void;
+}
+
+declare global {
+  interface Window {
+    cloudinary: any;
+  }
+}
+
+const UploadWidget: React.FC<UploadWidgetProps> = ({ onSuccess, onFailure }) => {
+  const cloudinaryRef = useRef<any>();
+  const widgetRef = useRef<any>();
+  
+  useEffect(() => {
+    // Add Cloudinary script if not already loaded
+    if (!cloudinaryRef.current) {
+      const script = document.createElement('script');
+      script.src = 'https://upload-widget.cloudinary.com/global/all.js';
+      script.async = true;
+      document.body.appendChild(script);
+      
+      script.onload = () => {
+        cloudinaryRef.current = window.cloudinary;
+        initializeWidget();
+      };
+    } else {
+      initializeWidget();
+    }
+    
+    return () => {
+      // Clean up widget if component unmounts
+      if (widgetRef.current) {
+        widgetRef.current.destroy();
+      }
+    };
+  }, []);
+  
+  const initializeWidget = () => {
+    if (!cloudinaryRef.current) return;
+    
+    widgetRef.current = cloudinaryRef.current.createUploadWidget(
+      {
+        cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
+        uploadPreset: process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET,
+        sources: [
+          'local',
+          'camera',
+          'url',
+          'google_drive',
+          'dropbox',
+          'instagram',
+          'shutterstock',
+          'getty',
+          'unsplash'
+        ],
+        multiple: true,
+        maxFiles: 50,
+        styles: {
+          palette: {
+            window: '#FFFFFF',
+            windowBorder: '#90A0B3',
+            tabIcon: '#0078FF',
+            menuIcons: '#5A616A',
+            textDark: '#000000',
+            textLight: '#FFFFFF',
+            link: '#0078FF',
+            action: '#FF620C',
+            inactiveTabIcon: '#0E2F5A',
+            error: '#F44235',
+            inProgress: '#0078FF',
+            complete: '#20B832',
+            sourceBg: '#E4EBF1'
+          },
+          fonts: {
+            default: null,
+            "'Poppins', sans-serif": {
+              url: 'https://fonts.googleapis.com/css?family=Poppins',
+              active: true
+            }
+          }
+        },
+        showUploadMoreButton: true,
+        autoMinimize: true,
+        showAdvancedOptions: false,
+        showPoweredBy: false,
+      },
+      (error: any, result: any) => {
+        if (!error && result && result.event === 'success') {
+          if (onSuccess) onSuccess(result.info);
+        }
+        
+        if (error) {
+          if (onFailure) onFailure(error);
+        }
+      }
+    );
+  };
+  
+  const openWidget = () => {
+    if (widgetRef.current) {
+      widgetRef.current.open();
+    }
+  };
+  
+  return (
+    <button
+      onClick={openWidget}
+      className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full shadow-lg fixed bottom-6 right-6 z-10"
+    >
+      Upload Photos
+    </button>
+  );
+};
+
+export default UploadWidget;
+```
+2. Create upload preset in Cloudinary dashboard with the following settings:
+   - Enable unsigned uploads
+   - Configure auto-tagging
+   - Set up format conversion (HEIC to JPEG)
+   - Enable auto-orientation fix
+   - Configure metadata preservation
+3. Add environment variables for upload widget:
+```
+NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=your_cloud_name
+NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET=your_upload_preset
+```
+4. Add UploadWidget to main layout for authenticated users with upload permission
+5. Implement upload success and failure handlers
+6. Add progress tracking and notifications
+
+# Test Strategy:
+1. Test upload functionality with different file types (JPEG, PNG, HEIC)
+2. Verify mobile uploads work correctly
+3. Test uploads from different sources (camera, gallery, cloud services)
+4. Confirm error handling works for failed uploads
+5. Test multiple file uploads
+6. Verify automatic processing (format conversion, orientation fix)

@@ -1,0 +1,139 @@
+# Task ID: 12
+# Title: API Routes Implementation
+# Status: pending
+# Dependencies: 2, 3
+# Priority: high
+# Description: Implement API routes for photo retrieval, authentication, and upload management.
+# Details:
+1. Create authentication API in app/api/auth/route.ts:
+```typescript
+import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
+import { encrypt } from '@/lib/encryption';
+
+export async function POST(request: NextRequest) {
+  const data = await request.json();
+  const { password, type } = data;
+  
+  const uploadPassword = process.env.UPLOAD_PASSWORD;
+  const galleryPassword = process.env.GALLERY_PASSWORD;
+  
+  let isAuthorized = false;
+  let role = '';
+  
+  if (password === uploadPassword) {
+    isAuthorized = true;
+    role = 'uploader';
+  } else if (password === galleryPassword) {
+    isAuthorized = true;
+    role = 'viewer';
+  }
+  
+  if (!isAuthorized) {
+    return NextResponse.json(
+      { error: 'Invalid password' },
+      { status: 401 }
+    );
+  }
+  
+  // Set session duration (in hours)
+  const sessionDuration = parseInt(process.env.SESSION_DURATION || '168');
+  const expiresIn = 60 * 60 * sessionDuration;
+  
+  // Create encrypted token
+  const token = encrypt(JSON.stringify({
+    role,
+    exp: Math.floor(Date.now() / 1000) + expiresIn,
+  }));
+  
+  // Set cookie
+  cookies().set({
+    name: 'auth-token',
+    value: token,
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: expiresIn,
+    path: '/',
+  });
+  
+  return NextResponse.json({ success: true, role });
+}
+```
+2. Create photos API in app/api/photos/route.ts (expanded from task 4):
+```typescript
+import { NextRequest, NextResponse } from 'next/server';
+import cloudinary from '@/lib/cloudinary';
+
+export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const page = parseInt(searchParams.get('page') || '1');
+  const limit = parseInt(searchParams.get('limit') || '30');
+  const nextCursor = searchParams.get('next_cursor');
+  const folder = searchParams.get('folder') || '';
+  
+  try {
+    let expression = 'resource_type:image';
+    if (folder) {
+      expression += ` AND folder=${folder}`;
+    }
+    
+    const result = await cloudinary.v2.search
+      .expression(expression)
+      .sort_by('created_at', 'desc')
+      .max_results(limit)
+      .next_cursor(nextCursor)
+      .execute();
+      
+    return NextResponse.json({
+      photos: result.resources,
+      next_cursor: result.next_cursor,
+      total_count: result.total_count,
+    });
+  } catch (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+```
+3. Create encryption utility in lib/encryption.ts:
+```typescript
+import crypto from 'crypto';
+
+const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default-key-that-is-32-chars-long!';
+const IV_LENGTH = 16;
+
+export function encrypt(text: string): string {
+  const iv = crypto.randomBytes(IV_LENGTH);
+  const cipher = crypto.createCipheriv(
+    'aes-256-cbc',
+    Buffer.from(ENCRYPTION_KEY),
+    iv
+  );
+  let encrypted = cipher.update(text, 'utf8', 'hex');
+  encrypted += cipher.final('hex');
+  return `${iv.toString('hex')}:${encrypted}`;
+}
+
+export function decrypt(text: string): string {
+  const [ivHex, encryptedHex] = text.split(':');
+  const iv = Buffer.from(ivHex, 'hex');
+  const decipher = crypto.createDecipheriv(
+    'aes-256-cbc',
+    Buffer.from(ENCRYPTION_KEY),
+    iv
+  );
+  let decrypted = decipher.update(encryptedHex, 'hex', 'utf8');
+  decrypted += decipher.final('utf8');
+  return decrypted;
+}
+```
+4. Add API route for logout in app/api/auth/logout/route.ts
+5. Implement rate limiting for API routes
+6. Add CORS configuration for Cloudinary
+
+# Test Strategy:
+1. Test authentication API with valid and invalid passwords
+2. Verify photo retrieval API returns correct data
+3. Test pagination and filtering in photo API
+4. Verify encryption and decryption functions work correctly
+5. Test rate limiting functionality
+6. Verify CORS configuration works correctly

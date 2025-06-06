@@ -1,0 +1,47 @@
+# Task ID: 2
+# Title: Cloudinary Integration Setup
+# Status: done
+# Dependencies: 1
+# Priority: high
+# Description: Set up Cloudinary account, configure API integration, and establish folder structure for photo storage.
+# Details:
+1. Create a Cloudinary account if not already available
+2. Install Cloudinary SDK:
+```bash
+npm install cloudinary next-cloudinary
+```
+3. Configure environment variables in .env.local:
+```
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+```
+4. Create utility functions for Cloudinary in lib/cloudinary.ts:
+```typescript
+import { v2 as cloudinary } from 'cloudinary';
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+export default cloudinary;
+
+export async function getPhotos(options = {}) {
+  const results = await cloudinary.search
+    .expression('resource_type:image')
+    .sort_by('created_at', 'desc')
+    .max_results(30)
+    .execute();
+  return results;
+}
+```
+5. Set up folder structure in Cloudinary for organizing photos
+6. Configure transformation presets for different image sizes (thumbnail: 400px, display: 1200px, fullsize: 2560px)
+
+# Test Strategy:
+1. Test API connection by fetching a sample image
+2. Verify environment variables are correctly loaded
+3. Test the getPhotos function to ensure it returns expected results
+4. Validate transformation presets work correctly

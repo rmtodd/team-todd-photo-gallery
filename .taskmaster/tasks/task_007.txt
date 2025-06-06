@@ -1,0 +1,72 @@
+# Task ID: 7
+# Title: Image Optimization Implementation
+# Status: pending
+# Dependencies: 2, 4
+# Priority: high
+# Description: Implement image optimization techniques including responsive images, WebP/AVIF delivery, and lazy loading.
+# Details:
+1. Create optimized image component in components/OptimizedImage.tsx:
+```typescript
+import React from 'react';
+import Image from 'next/image';
+import { CldImage } from 'next-cloudinary';
+
+interface OptimizedImageProps {
+  publicId: string;
+  alt: string;
+  width: number;
+  height: number;
+  priority?: boolean;
+  sizes?: string;
+}
+
+const OptimizedImage: React.FC<OptimizedImageProps> = ({
+  publicId,
+  alt,
+  width,
+  height,
+  priority = false,
+  sizes = '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw',
+}) => {
+  return (
+    <CldImage
+      src={publicId}
+      width={width}
+      height={height}
+      alt={alt || 'Photo'}
+      priority={priority}
+      sizes={sizes}
+      format="auto"
+      quality="auto"
+      loading={priority ? 'eager' : 'lazy'}
+      placeholder="blur"
+      blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+P+/HgAEtAI8QfmZPgAAAABJRU5ErkJggg=="
+    />
+  );
+};
+
+export default OptimizedImage;
+```
+2. Update PhotoGallery to use OptimizedImage component
+3. Configure Cloudinary transformations for optimal delivery:
+```typescript
+// Example transformation URL parameters
+const transformationOptions = {
+  quality: 'auto',
+  fetchFormat: 'auto', // For WebP/AVIF delivery
+  responsive: true,
+  width: 'auto',
+  dpr: 'auto',
+};
+```
+4. Implement responsive image sizes based on viewport
+5. Set up lazy loading with placeholders
+6. Configure progressive enhancement for image loading
+
+# Test Strategy:
+1. Test image loading performance using Lighthouse
+2. Verify WebP/AVIF format delivery on supported browsers
+3. Test lazy loading behavior
+4. Measure image load times on different network conditions
+5. Verify placeholder images appear correctly
+6. Test responsive behavior across different screen sizes

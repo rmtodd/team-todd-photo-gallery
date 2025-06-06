@@ -1,0 +1,40 @@
+# Task ID: 1
+# Title: Project Setup and Configuration
+# Status: done
+# Dependencies: None
+# Priority: high
+# Description: Initialize Next.js 14+ project with App Router, TypeScript, Tailwind CSS, and configure essential development tools.
+# Details:
+1. Create a new Next.js project with App Router:
+```bash
+npx create-next-app@latest team-todd-photo-gallery --typescript --tailwind --app
+```
+2. Configure TypeScript with strict mode
+3. Set up ESLint and Prettier:
+```bash
+npm install --save-dev eslint-config-prettier prettier
+```
+4. Configure Husky pre-commit hooks:
+```bash
+npm install --save-dev husky lint-staged
+npx husky install
+npx husky add .husky/pre-commit "npx lint-staged"
+```
+5. Create lint-staged.config.js
+6. Set up basic folder structure:
+   - app/ (for App Router)
+   - components/
+   - lib/
+   - public/
+   - styles/
+7. Configure Tailwind CSS for the project
+8. Set up Jest and React Testing Library:
+```bash
+npm install --save-dev jest @testing-library/react @testing-library/jest-dom jest-environment-jsdom
+```
+
+# Test Strategy:
+1. Verify project builds without errors
+2. Confirm TypeScript, ESLint, and Prettier configurations work correctly
+3. Test pre-commit hooks by making changes and committing
+4. Run a basic test to ensure testing framework is properly configured

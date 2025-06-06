@@ -1,0 +1,123 @@
+# Task ID: 14
+# Title: Progressive Web App (PWA) Implementation
+# Status: pending
+# Dependencies: 8
+# Priority: low
+# Description: Configure the application as a Progressive Web App with offline capabilities and installability.
+# Details:
+1. Install next-pwa package:
+```bash
+npm install next-pwa
+```
+2. Configure next.config.js for PWA:
+```javascript
+const withPWA = require('next-pwa');
+
+module.exports = withPWA({
+  pwa: {
+    dest: 'public',
+    register: true,
+    skipWaiting: true,
+    disable: process.env.NODE_ENV === 'development',
+  },
+});
+```
+3. Create manifest.json in public/manifest.json:
+```json
+{
+  "name": "Team Todd Photo Gallery",
+  "short_name": "Todd Gallery",
+  "description": "A private family photo gallery",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0078FF",
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
+```
+4. Create app icons in different sizes
+5. Add offline fallback page in public/offline.html
+6. Configure service worker to handle offline scenarios
+7. Add install prompt for PWA:
+```typescript
+// In components/InstallPrompt.tsx
+import React, { useEffect, useState } from 'react';
+
+const InstallPrompt: React.FC = () => {
+  const [installPrompt, setInstallPrompt] = useState<any>(null);
+  const [showPrompt, setShowPrompt] = useState(false);
+  
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: any) => {
+      e.preventDefault();
+      setInstallPrompt(e);
+      setShowPrompt(true);
+    };
+    
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+  
+  const handleInstallClick = () => {
+    if (!installPrompt) return;
+    
+    installPrompt.prompt();
+    installPrompt.userChoice.then((choiceResult: any) => {
+      if (choiceResult.outcome === 'accepted') {
+        console.log('User accepted the install prompt');
+      }
+      setInstallPrompt(null);
+      setShowPrompt(false);
+    });
+  };
+  
+  if (!showPrompt) return null;
+  
+  return (
+    <div className="fixed bottom-0 left-0 right-0 bg-blue-50 p-4 shadow-lg">
+      <div className="flex justify-between items-center">
+        <p className="text-blue-800">Install this app on your device for quick access</p>
+        <div className="flex space-x-2">
+          <button
+            onClick={() => setShowPrompt(false)}
+            className="px-3 py-1 text-blue-600 border border-blue-600 rounded-md"
+          >
+            Not now
+          </button>
+          <button
+            onClick={handleInstallClick}
+            className="px-3 py-1 bg-blue-600 text-white rounded-md"
+          >
+            Install
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default InstallPrompt;
+```
+
+# Test Strategy:
+1. Test PWA installability on different devices
+2. Verify offline functionality works correctly
+3. Test service worker update process
+4. Verify app icons display correctly
+5. Test install prompt behavior
+6. Verify manifest.json is correctly configured

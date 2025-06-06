@@ -1,0 +1,167 @@
+# Task ID: 5
+# Title: Photo Modal View Implementation
+# Status: pending
+# Dependencies: 4
+# Priority: medium
+# Description: Create a full-screen modal view for photos with swipe gestures, pinch-to-zoom, and position retention.
+# Details:
+1. Install Framer Motion for animations:
+```bash
+npm install framer-motion
+```
+2. Create PhotoModal component in components/PhotoModal.tsx:
+```typescript
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useSwipeable } from 'react-swipeable';
+
+interface PhotoModalProps {
+  photos: any[];
+  currentIndex: number;
+  isOpen: boolean;
+  onClose: () => void;
+  onNavigate: (newIndex: number) => void;
+}
+
+const PhotoModal: React.FC<PhotoModalProps> = ({
+  photos,
+  currentIndex,
+  isOpen,
+  onClose,
+  onNavigate,
+}) => {
+  const [scale, setScale] = useState(1);
+  
+  const handlers = useSwipeable({
+    onSwipedLeft: () => {
+      if (currentIndex < photos.length - 1) {
+        onNavigate(currentIndex + 1);
+      }
+    },
+    onSwipedRight: () => {
+      if (currentIndex > 0) {
+        onNavigate(currentIndex - 1);
+      }
+    },
+    trackMouse: true,
+  });
+  
+  const handleZoomIn = () => setScale(scale + 0.5);
+  const handleZoomOut = () => setScale(Math.max(1, scale - 0.5));
+  const handleReset = () => setScale(1);
+  
+  if (!isOpen) return null;
+  
+  const photo = photos[currentIndex];
+  
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-90"
+        onClick={onClose}
+      >
+        <div
+          className="relative w-full h-full flex items-center justify-center"
+          onClick={(e) => e.stopPropagation()}
+          {...handlers}
+        >
+          <motion.img
+            src={photo.secure_url}
+            alt={photo.context?.custom?.caption || ''}
+            style={{ scale }}
+            className="max-h-screen max-w-full object-contain"
+          />
+          
+          <div className="absolute bottom-4 left-0 right-0 flex justify-center space-x-4">
+            <button
+              onClick={handleZoomIn}
+              className="bg-white bg-opacity-20 p-2 rounded-full"
+            >
+              Zoom +
+            </button>
+            <button
+              onClick={handleZoomOut}
+              className="bg-white bg-opacity-20 p-2 rounded-full"
+            >
+              Zoom -
+            </button>
+            <button
+              onClick={handleReset}
+              className="bg-white bg-opacity-20 p-2 rounded-full"
+            >
+              Reset
+            </button>
+          </div>
+          
+          <button
+            className="absolute top-4 right-4 text-white text-2xl"
+            onClick={onClose}
+          >
+            &times;
+          </button>
+          
+          <button
+            className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white text-4xl"
+            onClick={() => currentIndex > 0 && onNavigate(currentIndex - 1)}
+            disabled={currentIndex === 0}
+          >
+            &lt;
+          </button>
+          
+          <button
+            className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white text-4xl"
+            onClick={() => currentIndex < photos.length - 1 && onNavigate(currentIndex + 1)}
+            disabled={currentIndex === photos.length - 1}
+          >
+            &gt;
+          </button>
+        </div>
+      </motion.div>
+    </AnimatePresence>
+  );
+};
+
+export default PhotoModal;
+```
+3. Update PhotoGallery component to integrate with modal:
+```typescript
+// Add to PhotoGallery.tsx
+const [modalOpen, setModalOpen] = useState(false);
+const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
+
+const handlePhotoClick = (index) => {
+  setCurrentPhotoIndex(index);
+  setModalOpen(true);
+};
+
+const handleCloseModal = () => {
+  setModalOpen(false);
+};
+
+const handleNavigate = (newIndex) => {
+  setCurrentPhotoIndex(newIndex);
+};
+
+// Add to return statement
+<PhotoModal
+  photos={photos}
+  currentIndex={currentPhotoIndex}
+  isOpen={modalOpen}
+  onClose={handleCloseModal}
+  onNavigate={handleNavigate}
+/>
+```
+4. Implement pinch-to-zoom functionality using gesture handlers
+5. Add smooth transitions between photos
+6. Ensure scroll position is maintained when closing the modal
+
+# Test Strategy:
+1. Test modal opening and closing
+2. Verify swipe gestures work for navigation
+3. Test pinch-to-zoom functionality on mobile devices
+4. Confirm scroll position is maintained when closing the modal
+5. Test keyboard navigation (arrow keys)
+6. Verify accessibility features work correctly

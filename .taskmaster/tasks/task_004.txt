@@ -1,0 +1,106 @@
+# Task ID: 4
+# Title: Photo Gallery Grid Implementation
+# Status: pending
+# Dependencies: 2, 3
+# Priority: high
+# Description: Create a responsive, masonry-style photo grid with infinite scrolling using React Photo Album.
+# Details:
+1. Install React Photo Album:
+```bash
+npm install react-photo-album
+```
+2. Create PhotoGallery component in components/PhotoGallery.tsx:
+```typescript
+import React, { useState, useEffect } from 'react';
+import PhotoAlbum from 'react-photo-album';
+import { useInView } from 'react-intersection-observer';
+import { SWRConfig, useSWR } from 'swr';
+
+const fetcher = (url) => fetch(url).then((res) => res.json());
+
+const PhotoGallery = () => {
+  const [photos, setPhotos] = useState([]);
+  const [page, setPage] = useState(1);
+  const { ref, inView } = useInView();
+  
+  const { data, error, isLoading } = useSWR(
+    `/api/photos?page=${page}&limit=30`,
+    fetcher,
+    { revalidateOnFocus: false }
+  );
+  
+  useEffect(() => {
+    if (data?.photos) {
+      setPhotos((prevPhotos) => [...prevPhotos, ...data.photos]);
+    }
+  }, [data]);
+  
+  useEffect(() => {
+    if (inView) {
+      setPage((prevPage) => prevPage + 1);
+    }
+  }, [inView]);
+  
+  if (error) return <div>Failed to load photos</div>;
+  
+  return (
+    <div className="container mx-auto px-4">
+      <PhotoAlbum
+        layout="masonry"
+        photos={photos.map((photo) => ({
+          src: photo.secure_url,
+          width: photo.width,
+          height: photo.height,
+          key: photo.public_id,
+        }))}
+        spacing={8}
+        targetRowHeight={300}
+        onClick={({ index }) => console.log(`Clicked photo at index ${index}`)}
+      />
+      {isLoading && <div className="text-center py-4">Loading...</div>}
+      <div ref={ref} className="h-10" />
+    </div>
+  );
+};
+
+export default PhotoGallery;
+```
+3. Create API route for photos in app/api/photos/route.ts:
+```typescript
+import { NextResponse } from 'next/server';
+import cloudinary from '@/lib/cloudinary';
+
+export async function GET(request) {
+  const { searchParams } = new URL(request.url);
+  const page = parseInt(searchParams.get('page') || '1');
+  const limit = parseInt(searchParams.get('limit') || '30');
+  const nextCursor = searchParams.get('next_cursor');
+  
+  try {
+    const result = await cloudinary.v2.search
+      .expression('resource_type:image')
+      .sort_by('created_at', 'desc')
+      .max_results(limit)
+      .next_cursor(nextCursor)
+      .execute();
+      
+    return NextResponse.json({
+      photos: result.resources,
+      next_cursor: result.next_cursor,
+      total_count: result.total_count,
+    });
+  } catch (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+```
+4. Implement virtual scrolling for performance optimization
+5. Add responsive grid layout with adaptive columns based on screen size
+6. Implement loading indicators and placeholders
+
+# Test Strategy:
+1. Test gallery rendering with different screen sizes
+2. Verify infinite scrolling loads more photos when reaching the bottom
+3. Test performance with a large number of photos (1000+)
+4. Verify loading indicators appear correctly
+5. Test error handling when API fails
