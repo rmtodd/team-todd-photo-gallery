@@ -11,6 +11,7 @@ The root directory contains essential configuration files that must be at the pr
 - `tsconfig.json` - TypeScript configuration
 - `next.config.ts` & `next-env.d.ts` - Next.js configuration
 - `middleware.ts` - Next.js middleware (App Router requirement)
+- `postcss.config.mjs` - PostCSS configuration (required at root for Tailwind CSS v4)
 - `.gitignore` - Git ignore patterns
 - `README.md` - Project documentation
 
@@ -27,7 +28,6 @@ The root directory contains essential configuration files that must be at the pr
 ### `/config/`
 Contains configuration files that can be moved from root:
 - `.prettierrc` - Code formatting rules
-- `postcss.config.mjs` - PostCSS configuration for Tailwind
 
 ### `/src/`
 Main application source code:
@@ -56,9 +56,9 @@ Task Master AI project management files
 
 ### What We Moved
 ✅ **Prettier config** - Can be referenced via package.json
-✅ **PostCSS config** - Next.js finds it automatically in config/
 
 ### What Stays at Root
+❌ **PostCSS config** - Required by Next.js for Tailwind CSS v4 processing
 ❌ **Jest config** - Needs to find package.json and Next.js config
 ❌ **ESLint config** - Standard location for most tools
 ❌ **lint-staged config** - Works better with Husky from root
@@ -72,10 +72,23 @@ Task Master AI project management files
 3. **Logical Grouping**: Related configs grouped in `/config/`
 4. **Documentation**: This file explains the decisions made
 
+## Troubleshooting
+
+### Styling Issues
+If Tailwind CSS styles disappear:
+1. Ensure `postcss.config.mjs` is at project root
+2. Delete `.next` directory: `rm -rf .next`
+3. Restart development server: `npm run dev`
+
+### Build Errors
+If you see ENOENT errors for manifest files:
+1. Clean build directory: `rm -rf .next`
+2. Restart development server
+
 ## Future Improvements
 
 As the project grows, consider:
 - Moving more configs to `/config/` if tools support it
-- Creating `/docs/` for additional documentation
+- Creating additional documentation files
 - Adding `/scripts/` for build and deployment scripts
 - Organizing `/src/` with feature-based folders 
