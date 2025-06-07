@@ -66,11 +66,12 @@ const nextConfig: NextConfig = {
   },
 };
 
+// Use type assertion to bypass Next.js 15 compatibility issues with next-pwa
 const config = withPWA({
   dest: 'public',
   register: true,
   skipWaiting: true,
   disable: process.env.NODE_ENV === 'development',
-})(nextConfig);
+})(nextConfig as any) as NextConfig;
 
 export default config;
