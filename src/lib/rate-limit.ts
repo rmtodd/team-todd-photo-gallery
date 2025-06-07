@@ -50,11 +50,18 @@ export function rateLimit(config: RateLimitConfig) {
 
 // Pre-configured rate limiters
 export const authRateLimit = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  maxRequests: 5, // 5 attempts per 15 minutes
+  windowMs: 5 * 60 * 1000, // 5 minutes (reduced from 15)
+  maxRequests: 10, // 10 attempts per 5 minutes (increased from 5)
 });
 
 export const apiRateLimit = rateLimit({
   windowMs: 60 * 1000, // 1 minute
   maxRequests: 60, // 60 requests per minute
-}); 
+});
+
+// Development helper to clear rate limit store
+export function clearRateLimitStore() {
+  Object.keys(store).forEach(key => {
+    delete store[key];
+  });
+} 

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { authRateLimit } from '@/lib/rate-limit';
+import { authRateLimit, clearRateLimitStore } from '@/lib/rate-limit';
 import { createToken, getAuthFromRequest } from '@/lib/auth';
 
 export async function OPTIONS() {
@@ -17,10 +17,12 @@ export async function POST(request: NextRequest) {
   // Apply rate limiting
   const rateLimitResult = authRateLimit(request);
   if (!rateLimitResult.success) {
+    const resetTimeMinutes = Math.ceil((rateLimitResult.resetTime - Date.now()) / (1000 * 60));
     return NextResponse.json(
       { 
-        error: 'Too many authentication attempts. Please try again later.',
-        resetTime: rateLimitResult.resetTime 
+        error: `Too many authentication attempts. Please try again in ${resetTimeMinutes} minute(s).`,
+        resetTime: rateLimitResult.resetTime,
+        remaining: rateLimitResult.remaining
       },
       { 
         status: 429,
@@ -101,5 +103,24 @@ export async function GET(request: NextRequest) {
     });
   } catch {
     return NextResponse.json({ authenticated: false });
+  }
+}
+
+// Development endpoint to clear rate limit store
+export async function DELETE(request: NextRequest) {
+  // Only allow in development environment
+  if (process.env.NODE_ENV !== 'development') {
+    return NextResponse.json({ error: 'Not available in production' }, { status: 403 });
+  }
+  
+  try {
+    clearRateLimitStore();
+    return NextResponse.json({ 
+      success: true, 
+      message: 'Rate limit store cleared successfully' 
+    });
+  } catch (error) {
+    console.error('Error clearing rate limit store:', error);
+    return NextResponse.json({ error: 'Failed to clear rate limit store' }, { status: 500 });
   }
 } 

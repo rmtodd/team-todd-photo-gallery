@@ -22,7 +22,12 @@ export function middleware(request: NextRequest) {
     if (path !== '/') {
       loginUrl.searchParams.set('from', path.slice(1)); // Remove leading slash
     }
-    return NextResponse.redirect(loginUrl);
+    // Use status 303 and add cache-control headers to prevent caching issues
+    const response = NextResponse.redirect(loginUrl, { status: 303 });
+    response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    response.headers.set('Pragma', 'no-cache');
+    response.headers.set('Expires', '0');
+    return response;
   }
   
   try {
@@ -33,23 +38,31 @@ export function middleware(request: NextRequest) {
     if (decoded.exp && decoded.exp < Math.floor(Date.now() / 1000)) {
       const loginUrl = new URL('/login', request.url);
       loginUrl.searchParams.set('error', 'session_expired');
-      return NextResponse.redirect(loginUrl);
+      const response = NextResponse.redirect(loginUrl, { status: 303 });
+      response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+      return response;
     }
     
     // Check for upload paths - requires upload permission
     if (path.startsWith('/upload') && decoded.permission !== 'upload') {
       const loginUrl = new URL('/login', request.url);
       loginUrl.searchParams.set('error', 'insufficient_permissions');
-      return NextResponse.redirect(loginUrl);
+      const response = NextResponse.redirect(loginUrl, { status: 303 });
+      response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+      return response;
     }
     
-    // User has valid token, allow access
-    return NextResponse.next();
+    // User has valid token, allow access with no-cache headers for dynamic content
+    const response = NextResponse.next();
+    response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    return response;
   } catch (error) {
     // Invalid token, redirect to login
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('error', 'invalid_token');
-    return NextResponse.redirect(loginUrl);
+    const response = NextResponse.redirect(loginUrl, { status: 303 });
+    response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    return response;
   }
 }
 

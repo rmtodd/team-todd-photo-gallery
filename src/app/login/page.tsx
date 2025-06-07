@@ -3,6 +3,9 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
+// Force dynamic rendering to prevent caching issues with middleware authentication
+export const dynamic = 'force-dynamic';
+
 function LoginForm() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -38,6 +41,12 @@ function LoginForm() {
       const data = await response.json();
 
       if (response.ok) {
+        // Clear the router cache to ensure middleware recognizes the new auth state
+        router.refresh();
+        
+        // Small delay to ensure the refresh completes before navigation
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
         // Redirect to the page they were trying to access, or home
         const from = searchParams.get('from');
         router.push(from ? `/${from}` : '/');

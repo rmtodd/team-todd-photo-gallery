@@ -1,167 +1,87 @@
 # Task ID: 5
 # Title: Photo Modal View Implementation
-# Status: pending
+# Status: done
 # Dependencies: 4
 # Priority: medium
 # Description: Create a full-screen modal view for photos with swipe gestures, pinch-to-zoom, and position retention.
 # Details:
-1. Install Framer Motion for animations:
+1. Install Framer Motion and react-swipeable:
 ```bash
-npm install framer-motion
+npm install framer-motion react-swipeable
 ```
-2. Create PhotoModal component in components/PhotoModal.tsx:
-```typescript
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useSwipeable } from 'react-swipeable';
+2. Create PhotoModal component in components/PhotoModal.tsx with the following features:
+   - Full-screen overlay with smooth fade animations
+   - Swipe gestures for navigation (left/right for photos, up to close)
+   - Pinch-to-zoom functionality with mouse wheel support
+   - Drag support when zoomed in
+   - Keyboard navigation (arrow keys, escape)
+   - Navigation arrows with conditional display
+   - Zoom controls (+, -, Reset) with proper state management
+   - Photo counter display
+   - Caption support from Cloudinary metadata
+   - Proper TypeScript interfaces using CloudinaryPhoto type
 
-interface PhotoModalProps {
-  photos: any[];
-  currentIndex: number;
-  isOpen: boolean;
-  onClose: () => void;
-  onNavigate: (newIndex: number) => void;
-}
-
-const PhotoModal: React.FC<PhotoModalProps> = ({
-  photos,
-  currentIndex,
-  isOpen,
-  onClose,
-  onNavigate,
-}) => {
-  const [scale, setScale] = useState(1);
-  
-  const handlers = useSwipeable({
-    onSwipedLeft: () => {
-      if (currentIndex < photos.length - 1) {
-        onNavigate(currentIndex + 1);
-      }
-    },
-    onSwipedRight: () => {
-      if (currentIndex > 0) {
-        onNavigate(currentIndex - 1);
-      }
-    },
-    trackMouse: true,
-  });
-  
-  const handleZoomIn = () => setScale(scale + 0.5);
-  const handleZoomOut = () => setScale(Math.max(1, scale - 0.5));
-  const handleReset = () => setScale(1);
-  
-  if (!isOpen) return null;
-  
-  const photo = photos[currentIndex];
-  
-  return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-90"
-        onClick={onClose}
-      >
-        <div
-          className="relative w-full h-full flex items-center justify-center"
-          onClick={(e) => e.stopPropagation()}
-          {...handlers}
-        >
-          <motion.img
-            src={photo.secure_url}
-            alt={photo.context?.custom?.caption || ''}
-            style={{ scale }}
-            className="max-h-screen max-w-full object-contain"
-          />
-          
-          <div className="absolute bottom-4 left-0 right-0 flex justify-center space-x-4">
-            <button
-              onClick={handleZoomIn}
-              className="bg-white bg-opacity-20 p-2 rounded-full"
-            >
-              Zoom +
-            </button>
-            <button
-              onClick={handleZoomOut}
-              className="bg-white bg-opacity-20 p-2 rounded-full"
-            >
-              Zoom -
-            </button>
-            <button
-              onClick={handleReset}
-              className="bg-white bg-opacity-20 p-2 rounded-full"
-            >
-              Reset
-            </button>
-          </div>
-          
-          <button
-            className="absolute top-4 right-4 text-white text-2xl"
-            onClick={onClose}
-          >
-            &times;
-          </button>
-          
-          <button
-            className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white text-4xl"
-            onClick={() => currentIndex > 0 && onNavigate(currentIndex - 1)}
-            disabled={currentIndex === 0}
-          >
-            &lt;
-          </button>
-          
-          <button
-            className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white text-4xl"
-            onClick={() => currentIndex < photos.length - 1 && onNavigate(currentIndex + 1)}
-            disabled={currentIndex === photos.length - 1}
-          >
-            &gt;
-          </button>
-        </div>
-      </motion.div>
-    </AnimatePresence>
-  );
-};
-
-export default PhotoModal;
-```
 3. Update PhotoGallery component to integrate with modal:
-```typescript
-// Add to PhotoGallery.tsx
-const [modalOpen, setModalOpen] = useState(false);
-const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
+   - Import and integrate PhotoModal
+   - Add modal state management (open/closed, current index, scroll position)
+   - Implement scroll position retention when closing modal
+   - Prevent body scroll when modal is open
+   - Handle photo click events to open modal
 
-const handlePhotoClick = (index) => {
-  setCurrentPhotoIndex(index);
-  setModalOpen(true);
-};
+4. Implement the following features:
+   - Full-screen modal view
+   - Swipe gestures (left/right navigation, up to close)
+   - Pinch-to-zoom with mouse wheel support
+   - Position retention (scroll position maintained)
+   - Smooth animations with Framer Motion
+   - Keyboard navigation support
+   - Accessibility features (aria-labels, proper focus management)
+   - Photo counter and caption display
+   - Responsive design for mobile and desktop
 
-const handleCloseModal = () => {
-  setModalOpen(false);
-};
-
-const handleNavigate = (newIndex) => {
-  setCurrentPhotoIndex(newIndex);
-};
-
-// Add to return statement
-<PhotoModal
-  photos={photos}
-  currentIndex={currentPhotoIndex}
-  isOpen={modalOpen}
-  onClose={handleCloseModal}
-  onNavigate={handleNavigate}
-/>
-```
-4. Implement pinch-to-zoom functionality using gesture handlers
-5. Add smooth transitions between photos
-6. Ensure scroll position is maintained when closing the modal
+5. Fix TypeScript linting issues and ensure proper type safety
 
 # Test Strategy:
 1. Test modal opening and closing
-2. Verify swipe gestures work for navigation
-3. Test pinch-to-zoom functionality on mobile devices
+2. Verify swipe gestures work for navigation and closing
+3. Test pinch-to-zoom functionality on mobile devices and mouse wheel zoom on desktop
 4. Confirm scroll position is maintained when closing the modal
-5. Test keyboard navigation (arrow keys)
+5. Test keyboard navigation (arrow keys, escape)
 6. Verify accessibility features work correctly
+7. Test drag functionality when zoomed in
+8. Verify photo counter and caption display
+9. Test responsive design on various screen sizes
+10. Ensure smooth animations during transitions
+11. Verify proper handling of Cloudinary metadata for captions
+
+# Subtasks:
+## 5.1. Install dependencies [completed]
+### Dependencies: None
+### Description: Install Framer Motion and react-swipeable packages
+### Details:
+
+
+## 5.2. Create PhotoModal component [completed]
+### Dependencies: None
+### Description: Implement PhotoModal component with all required features
+### Details:
+
+
+## 5.3. Update PhotoGallery component [completed]
+### Dependencies: None
+### Description: Integrate PhotoModal and implement necessary state management
+### Details:
+
+
+## 5.4. Implement core features [completed]
+### Dependencies: None
+### Description: Implement full-screen view, gestures, zoom, animations, and other required features
+### Details:
+
+
+## 5.5. Code quality and type safety [completed]
+### Dependencies: None
+### Description: Fix TypeScript linting issues and ensure proper type safety
+### Details:
+
+

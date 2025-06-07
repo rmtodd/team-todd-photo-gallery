@@ -7,6 +7,9 @@ import UploadWidget from "@/components/UploadWidget";
 import PerformanceStats from "@/components/PerformanceStats";
 import { useEffect, useState } from "react";
 
+// Force dynamic rendering to prevent caching issues with middleware authentication
+export const dynamic = 'force-dynamic';
+
 export default function Home() {
   const { authenticated, permission, loading } = useAuth();
   const [mounted, setMounted] = useState(false);
@@ -67,12 +70,7 @@ export default function Home() {
             Photo Gallery
           </h2>
           
-          <PhotoGallery 
-            onPhotoClick={(index, photos) => {
-              console.log('Photo clicked:', index, photos[index]);
-              // TODO: Implement modal view in next task
-            }}
-          />
+          <PhotoGallery />
         </div>
 
         {/* Feature Overview */}
