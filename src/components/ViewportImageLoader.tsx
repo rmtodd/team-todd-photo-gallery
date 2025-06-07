@@ -47,7 +47,7 @@ const ViewportImageLoader: React.FC<ViewportImageLoaderProps> = ({
         ];
 
         const imagePromises = sizes.map(({ width, quality }) => {
-          return new Promise<void>((resolve, _reject) => {
+          return new Promise<void>((resolve) => {
             const img = new Image();
             const params = [
               'f_auto',

@@ -18,7 +18,6 @@ export function rateLimit(config: RateLimitConfig) {
   return (request: NextRequest): { success: boolean; remaining: number; resetTime: number } => {
     const ip = request.ip || request.headers.get('x-forwarded-for') || 'unknown';
     const now = Date.now();
-    const windowStart = now - config.windowMs;
     
     // Clean up old entries
     Object.keys(store).forEach(key => {

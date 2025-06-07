@@ -3,16 +3,9 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 
-interface UploadResultInfo {
-  // Define properties based on what you use from the result info
-  secure_url: string;
-  public_id: string;
-  [key: string]: any;
-}
-
 interface UploadWidgetProps {
-  onSuccess?: (result: UploadResultInfo) => void;
-  onFailure?: (error: any) => void;
+  onSuccess?: (result: cloudinary.UploadWidgetResultInfo) => void;
+  onFailure?: (error: Error) => void;
 }
 
 declare global {
@@ -81,11 +74,11 @@ const UploadWidget: React.FC<UploadWidgetProps> = ({ onSuccess, onFailure }) => 
           { quality: 'auto', fetch_format: 'auto' }
         ]
       },
-      (error: any, result: cloudinary.UploadWidgetResult) => {
+      (error, result) => {
         if (!error && result && result.event === 'success') {
           console.log('Upload successful:', result.info);
           setUploadCount(prev => prev + 1);
-          if (onSuccess) onSuccess(result.info as UploadResultInfo);
+          if (onSuccess) onSuccess(result.info);
         }
         
         if (error) {
