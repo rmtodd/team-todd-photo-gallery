@@ -51,7 +51,7 @@ export function rateLimit(config: RateLimitConfig) {
 // Pre-configured rate limiters
 export const authRateLimit = rateLimit({
   windowMs: 5 * 60 * 1000, // 5 minutes (reduced from 15)
-  maxRequests: 10, // 10 attempts per 5 minutes (increased from 5)
+  maxRequests: 50, // 50 attempts per 5 minutes (increased from 10)
 });
 
 export const apiRateLimit = rateLimit({

@@ -15,14 +15,14 @@ declare global {
 }
 
 const UploadWidget: React.FC<UploadWidgetProps> = ({ onSuccess, onFailure }) => {
-  const { permission } = useAuth();
+  const { hasUploadPermission } = useAuth();
   const cloudinaryRef = useRef<any>();
   const widgetRef = useRef<any>();
   const [isLoading, setIsLoading] = useState(false);
   const [uploadCount, setUploadCount] = useState(0);
 
   // Only show upload button for users with upload permission
-  if (permission !== 'upload') {
+  if (!hasUploadPermission()) {
     return null;
   }
 
@@ -141,37 +141,34 @@ const UploadWidget: React.FC<UploadWidgetProps> = ({ onSuccess, onFailure }) => 
         disabled={isLoading}
         className={`
           fixed bottom-6 right-6 z-50
-          bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300
-          text-white font-semibold
-          py-3 px-6 rounded-full shadow-lg
+          w-10 h-10 rounded-full
+          bg-white/60 border border-black/20
+          hover:bg-white/80 hover:border-black/40 disabled:bg-gray-100/50 disabled:border-gray-400/20
+          shadow-md hover:shadow-lg
+          backdrop-blur-sm
           transition-all duration-200 ease-in-out
           transform hover:scale-105 active:scale-95
-          flex items-center space-x-2
+          flex items-center justify-center
           ${isLoading ? 'cursor-not-allowed' : 'cursor-pointer'}
         `}
+        title={isLoading ? 'Uploading...' : 'Upload Photos'}
       >
         {isLoading ? (
-          <>
-            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-            <span>Uploading...</span>
-          </>
+          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600/60"></div>
         ) : (
-          <>
-            <svg 
-              className="w-5 h-5" 
-              fill="none" 
-              stroke="currentColor" 
-              viewBox="0 0 24 24"
-            >
-              <path 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                strokeWidth={2} 
-                d="M12 4v16m8-8H4" 
-              />
-            </svg>
-            <span>Upload Photos</span>
-          </>
+          <svg 
+            className="w-5 h-5 text-black/70" 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+          >
+            <path 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              strokeWidth={2} 
+              d="M12 6v12m6-6H6" 
+            />
+          </svg>
         )}
       </button>
 

@@ -6,6 +6,23 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+export interface CloudinaryPhoto {
+  public_id: string;
+  secure_url: string;
+  width: number;
+  height: number;
+  format: string;
+  created_at: string;
+  context?: {
+    custom?: {
+      caption?: string;
+      alt?: string;
+    };
+  };
+}
+
+
+
 export default cloudinary;
 
 export async function getPhotos(options: {
@@ -41,19 +58,4 @@ export async function getPhotos(options: {
     console.error('Error fetching photos from Cloudinary:', error);
     throw error;
   }
-}
-
-export interface CloudinaryPhoto {
-  public_id: string;
-  secure_url: string;
-  width: number;
-  height: number;
-  format: string;
-  created_at: string;
-  context?: {
-    custom?: {
-      caption?: string;
-      alt?: string;
-    };
-  };
 } 

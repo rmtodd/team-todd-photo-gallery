@@ -3,6 +3,10 @@ import withPWA from 'next-pwa';
 
 const nextConfig: NextConfig = {
   images: {
+    // Use Cloudinary as the loader for optimal performance
+    loader: 'cloudinary',
+    path: `https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/`,
+    // Keep remote patterns as fallback
     remotePatterns: [
       {
         protocol: 'https',
@@ -12,39 +16,53 @@ const nextConfig: NextConfig = {
       },
     ],
     formats: ['image/webp', 'image/avif'],
+    // Optimized device sizes based on Vercel's recommendations
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    // Minimize layout shift
+    minimumCacheTTL: 31536000, // 1 year cache
+    // More aggressive loading - reduce lazy loading threshold
+    dangerouslyAllowSVG: false,
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+    // Optimize for faster loading
+    unoptimized: false,
   },
-  // Security headers for PWA
+  // Enable experimental features for better performance
+  experimental: {
+    // Optimize CSS loading
+    optimizeCss: true,
+  },
+  // Turbopack configuration (stable in Next.js 15)
+  turbopack: {
+    rules: {
+      '*.svg': {
+        loaders: ['@svgr/webpack'],
+        as: '*.js',
+      },
+    },
+  },
+  // Enable compression
+  compress: true,
+  // Optimize static generation
+  trailingSlash: false,
+  // Optimize headers for better caching
   async headers() {
     return [
       {
-        source: '/(.*)',
+        source: '/_next/image(.*)',
         headers: [
           {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff',
-          },
-          {
-            key: 'X-Frame-Options',
-            value: 'DENY',
-          },
-          {
-            key: 'Referrer-Policy',
-            value: 'strict-origin-when-cross-origin',
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
           },
         ],
       },
       {
-        source: '/sw.js',
+        source: '/api/photos',
         headers: [
           {
-            key: 'Content-Type',
-            value: 'application/javascript; charset=utf-8',
-          },
-          {
             key: 'Cache-Control',
-            value: 'no-cache, no-store, must-revalidate',
+            value: 'public, max-age=300, s-maxage=600', // 5 min browser, 10 min CDN
           },
         ],
       },
@@ -52,12 +70,11 @@ const nextConfig: NextConfig = {
   },
 };
 
-// PWA configuration
-const pwaConfig = withPWA({
+const config = withPWA({
   dest: 'public',
   register: true,
   skipWaiting: true,
   disable: process.env.NODE_ENV === 'development',
-});
+})(nextConfig);
 
-export default pwaConfig(nextConfig);
+export default config;

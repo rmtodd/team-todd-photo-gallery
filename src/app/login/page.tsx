@@ -9,25 +9,14 @@ export const dynamic = 'force-dynamic';
 function LoginForm() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [showAnimation, setShowAnimation] = useState(false);
+  const [showError, setShowError] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
-
-  useEffect(() => {
-    const errorParam = searchParams.get('error');
-    if (errorParam === 'insufficient_permissions') {
-      setError('You need upload permissions to access that page.');
-    } else if (errorParam === 'invalid_token') {
-      setError('Your session has expired. Please log in again.');
-    } else if (errorParam === 'session_expired') {
-      setError('Your session has expired. Please log in again.');
-    }
-  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
 
     try {
       const response = await fetch('/api/auth', {
@@ -41,85 +30,92 @@ function LoginForm() {
       const data = await response.json();
 
       if (response.ok) {
-        // Clear the router cache to ensure middleware recognizes the new auth state
-        router.refresh();
+        // Start the animation - go straight to "Team Todd ❤️"
+        setShowAnimation(true);
         
-        // Small delay to ensure the refresh completes before navigation
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
-        // Redirect to the page they were trying to access, or home
-        const from = searchParams.get('from');
-        router.push(from ? `/${from}` : '/');
+        // After a brief animation, navigate
+        setTimeout(() => {
+          router.refresh();
+          const from = searchParams.get('from');
+          router.push(from ? `/${from}` : '/');
+        }, 1500); // 1.5 seconds total
       } else {
-        setError(data.error || 'Login failed');
+        setLoading(false);
+        // Show error animation
+        setShowError(true);
+        setTimeout(() => {
+          setShowError(false);
+          setPassword('');
+          // Refocus the input after clearing with a small delay to ensure it works
+          setTimeout(() => {
+            const input = document.querySelector('input');
+            if (input) {
+              input.focus();
+              input.click(); // Ensure cursor is visible and blinking
+            }
+          }, 50);
+        }, 500); // Show error for 0.5 seconds
       }
     } catch {
-      setError('Network error. Please try again.');
-    } finally {
       setLoading(false);
+      // Show error animation
+      setShowError(true);
+             setTimeout(() => {
+         setShowError(false);
+         setPassword('');
+         // Refocus the input after clearing with a small delay to ensure it works
+         setTimeout(() => {
+           const input = document.querySelector('input');
+           if (input) {
+             input.focus();
+             input.click(); // Ensure cursor is visible and blinking
+           }
+         }, 50);
+       }, 500); // Show error for 0.5 seconds
     }
   };
 
+  const getDisplayText = () => {
+    if (showAnimation) {
+      return 'TEAM TODD ❤️';
+    }
+    if (showError) {
+      return '❌';
+    }
+    return password;
+  };
+
+  const getInputType = () => {
+    if (showAnimation || showError) {
+      return 'text'; // Show "TEAM TODD ❤️" or "❌" as plain text
+    }
+    return 'password';
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="max-w-md w-full space-y-8 p-8">
-        <div className="bg-white rounded-lg shadow-lg p-8">
-          <div className="text-center">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">
-              Team Todd Photo Gallery
-            </h2>
-            <p className="text-gray-600 mb-8">
-              Enter your password to access the gallery
-            </p>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label htmlFor="password" className="sr-only">
-                Password
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Enter password"
-                disabled={loading}
-              />
-            </div>
-
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-                {error}
-              </div>
-            )}
-
-            <div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                {loading ? 'Signing in...' : 'Sign in'}
-              </button>
-            </div>
-          </form>
-
-          <div className="mt-6 text-center">
-            <div className="text-sm text-gray-600">
-              <p className="mb-2">Access Levels:</p>
-              <p className="text-xs">
-                <span className="font-medium">Upload Access:</span> Can upload and view photos
-              </p>
-              <p className="text-xs">
-                <span className="font-medium">View Access:</span> Can view photos only
-              </p>
-            </div>
-          </div>
-        </div>
+    <div className="min-h-screen flex items-center justify-center bg-white">
+      <div className="w-full max-w-xs">
+        <form onSubmit={handleSubmit}>
+          <input
+            type={getInputType()}
+            value={getDisplayText()}
+            onChange={(e) => {
+              if (!showAnimation && !showError) {
+                setPassword(e.target.value);
+              }
+            }}
+            className={`w-full px-3 py-2 text-base focus:outline-none text-center font-mono ${
+              showAnimation 
+                ? 'text-black font-semibold border-0' 
+                : showError
+                ? 'text-red-500 font-semibold border-2 border-red-300'
+                : 'text-gray-900 border-2 border-gray-300 focus:border-gray-300 transition-all duration-300'
+            }`}
+            placeholder=""
+            disabled={loading || showAnimation || showError}
+            autoFocus
+          />
+        </form>
       </div>
     </div>
   );
@@ -128,8 +124,8 @@ function LoginForm() {
 export default function LoginPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-400"></div>
       </div>
     }>
       <LoginForm />

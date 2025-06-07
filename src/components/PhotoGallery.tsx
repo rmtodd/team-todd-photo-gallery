@@ -9,6 +9,9 @@ import { CloudinaryPhoto } from '@/lib/cloudinary';
 import OptimizedImage from './OptimizedImage';
 import PhotoModal from './PhotoModal';
 import SmartPrefetcher from './SmartPrefetcher';
+import ImagePreloader from './ImagePreloader';
+import ViewportImageLoader from './ViewportImageLoader';
+import RefreshDetector from './RefreshDetector';
 
 interface PhotoGalleryProps {
   onPhotoClick?: (index: number, photos: CloudinaryPhoto[]) => void;
@@ -25,7 +28,8 @@ const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 const PhotoGallery: React.FC<PhotoGalleryProps> = ({ onPhotoClick }) => {
   const [allPhotos, setAllPhotos] = useState<CloudinaryPhoto[]>([]);
-  const [nextCursor, setNextCursor] = useState<string | undefined>();
+  const [photos, setPhotos] = useState<any[]>([]);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   
@@ -39,56 +43,106 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({ onPhotoClick }) => {
     rootMargin: '100px',
   });
 
+  // Fetch photos from API
+  const fetcher = async (url: string) => {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Failed to fetch photos');
+    return response.json();
+  };
+
   // Initial data fetch
-  const { data, error, isLoading } = useSWR<PhotosResponse>(
-    '/api/photos?limit=30',
-    fetcher,
-    { 
-      revalidateOnFocus: false,
-      revalidateOnReconnect: false,
-    }
-  );
+  const { data, error, isLoading } = useSWR('/api/photos?limit=30', fetcher, {
+    revalidateOnFocus: false,
+    revalidateOnReconnect: false,
+  });
 
   // Set initial photos when data loads
   useEffect(() => {
     if (data?.photos) {
-      // Filter out corrupted photos (1x1 pixels) from initial data load
-      const validPhotos = data.photos.filter((photo) => {
-        return photo.width > 1 && photo.height > 1;
-      });
-      
+      const validPhotos = data.photos.filter((photo: CloudinaryPhoto) => 
+        photo.width > 1 && photo.height > 1
+      );
       setAllPhotos(validPhotos);
-      setNextCursor(data.next_cursor);
+      setNextCursor(data.next_cursor || null);
       setHasMore(!!data.next_cursor);
     }
   }, [data]);
 
-  // Load more photos when scrolling to bottom
-  const loadMorePhotos = useCallback(async () => {
-    if (!nextCursor || isLoadingMore || !hasMore) return;
-    
-    setIsLoadingMore(true);
-    
-    try {
-      const response = await fetch(`/api/photos?limit=30&next_cursor=${nextCursor}`);
-      const newData: PhotosResponse = await response.json();
+  // Transform photos for PhotoAlbum when allPhotos changes
+  useEffect(() => {
+    const transformedPhotos = allPhotos.map((photo, index) => ({
+      src: photo.secure_url,
+      width: photo.width,
+      height: photo.height,
+      alt: `Photo ${index + 1}`,
+      publicId: photo.public_id,
+      index,
+    }));
+    setPhotos(transformedPhotos);
+  }, [allPhotos]);
+
+  // Add hover handlers after photos are loaded
+  useEffect(() => {
+    if (photos.length === 0) return;
+
+    // Wait a bit for PhotoAlbum to render
+    const timer = setTimeout(() => {
+      const photoElements = document.querySelectorAll('[class*="photo"], [role="img"], img');
+      console.log('Photo elements found:', photoElements.length);
       
-      if (newData.photos) {
-        // Filter out corrupted photos (1x1 pixels) from newly loaded photos
-        const validNewPhotos = newData.photos.filter((photo) => {
-          return photo.width > 1 && photo.height > 1;
+      // Add hover handlers to photo containers
+      const containers = document.querySelectorAll('.react-photo-album--photo, [style*="cursor: pointer"]');
+      console.log('Containers found:', containers.length);
+      
+      containers.forEach((container: any) => {
+        // Set initial styles to ensure consistency
+        container.style.overflow = 'hidden';
+        container.style.transition = 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+        
+        // Add hover class handling
+        container.addEventListener('mouseenter', function() {
+          this.style.transform = 'translateY(-4px) scale(1.01)';
+          this.style.boxShadow = '0 8px 16px rgba(0, 0, 0, 0.1)';
+          this.style.zIndex = '10';
+          this.style.overflow = 'hidden';
         });
         
-        setAllPhotos(prev => [...prev, ...validNewPhotos]);
-        setNextCursor(newData.next_cursor);
-        setHasMore(!!newData.next_cursor);
-      }
+        container.addEventListener('mouseleave', function() {
+          this.style.transform = '';
+          this.style.boxShadow = '';
+          this.style.zIndex = '';
+          this.style.overflow = 'hidden';
+        });
+      });
+    }, 1000);
+    
+    return () => clearTimeout(timer);
+  }, [photos]);
+
+  // Load more photos when scrolling
+  const loadMorePhotos = useCallback(async () => {
+    if (!hasMore || isLoadingMore || !nextCursor) return;
+
+    setIsLoadingMore(true);
+    try {
+      const response = await fetch(`/api/photos?limit=30&next_cursor=${nextCursor}`);
+      if (!response.ok) throw new Error('Failed to load more photos');
+      
+      const newData = await response.json();
+      const validPhotos = newData.photos.filter((photo: CloudinaryPhoto) => 
+        photo.width > 1 && photo.height > 1
+      );
+      
+      setAllPhotos(prev => [...prev, ...validPhotos]);
+      setNextCursor(newData.next_cursor || null);
+      setHasMore(!!newData.next_cursor);
     } catch (error) {
       console.error('Error loading more photos:', error);
+      setHasMore(false);
     } finally {
       setIsLoadingMore(false);
     }
-  }, [nextCursor, isLoadingMore, hasMore]);
+  }, [nextCursor, hasMore, isLoadingMore]);
 
   // Trigger load more when intersection observer fires
   useEffect(() => {
@@ -97,14 +151,11 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({ onPhotoClick }) => {
     }
   }, [inView, hasMore, isLoadingMore, loadMorePhotos]);
 
-  // Modal handlers
+  // Handle photo click
   const handlePhotoClick = useCallback(({ index }: { index: number }) => {
-    // Store current scroll position
-    setScrollPosition(window.scrollY);
     setCurrentPhotoIndex(index);
+    setScrollPosition(window.scrollY);
     setModalOpen(true);
-    
-    // Prevent body scroll when modal is open
     document.body.style.overflow = 'hidden';
     
     // Call the optional onPhotoClick prop for backward compatibility
@@ -113,90 +164,71 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({ onPhotoClick }) => {
     }
   }, [onPhotoClick, allPhotos]);
 
+  // Handle modal close
   const handleCloseModal = useCallback(() => {
     setModalOpen(false);
-    
-    // Restore body scroll
     document.body.style.overflow = 'unset';
-    
-    // Restore scroll position after a brief delay to ensure modal is closed
-    setTimeout(() => {
-      window.scrollTo(0, scrollPosition);
-    }, 100);
+    window.scrollTo(0, scrollPosition);
   }, [scrollPosition]);
 
-  const handleNavigate = useCallback((newIndex: number) => {
-    setCurrentPhotoIndex(newIndex);
-  }, []);
+  // Handle navigation in modal
+  const handleNavigate = useCallback((direction: 'prev' | 'next') => {
+    setCurrentPhotoIndex(prev => {
+      if (direction === 'prev') {
+        return prev > 0 ? prev - 1 : photos.length - 1;
+      } else {
+        return prev < photos.length - 1 ? prev + 1 : 0;
+      }
+    });
+  }, [photos.length]);
 
   // Custom render function for optimized images with elegant styling
-  const renderPhoto = useCallback(({ photo, imageProps }: { photo: Record<string, any>; imageProps: Record<string, any> }) => {
-    const { style, ...restImageProps } = imageProps;
+  const renderPhoto = useCallback((props: any) => {
+    // PhotoAlbum might pass props in different ways
+    const photo = props?.photo || props;
+    
+    // Defensive checks for photo object
+    if (!photo || !photo.src) {
+      console.error('Invalid photo object:', photo);
+      return null;
+    }
+    
+    const photoIndex = photo.index ?? 0;
+    
+    // Extract imageProps if available
+    const imageProps = props?.imageProps || {};
+    const wrapperStyle = props?.wrapperStyle || {};
     
     return (
-      <div className="group relative overflow-hidden bg-white shadow-sm hover:shadow-lg transition-all duration-300 ease-out">
-        <OptimizedImage
-          publicId={photo.publicId}
-          alt={photo.alt}
-          width={photo.width}
-          height={photo.height}
-          priority={photo.index < 6} // Prioritize first 6 images
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-          className="cursor-pointer transition-all duration-300 ease-out group-hover:scale-[1.02] w-full h-full object-cover"
-          onClick={() => handlePhotoClick({ index: photo.index })}
-          {...restImageProps}
-          style={style}
+      <div
+        className="photo-wrapper"
+        style={{
+          ...wrapperStyle,
+          cursor: 'pointer',
+          position: 'relative',
+          overflow: 'hidden',
+        }}
+        onClick={() => handlePhotoClick({ index: photoIndex })}
+      >
+        <img
+          {...imageProps}
+          src={photo.src}
+          alt={photo.alt || `Photo ${photoIndex}`}
+          className="photo-image"
+          style={{ 
+            ...imageProps.style,
+            pointerEvents: 'none',
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+          }}
         />
-        {/* Subtle overlay on hover */}
-        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-5 transition-all duration-300 ease-out pointer-events-none" />
       </div>
     );
   }, [handlePhotoClick]);
 
-  // Transform Cloudinary photos to react-photo-album format with normalized dimensions
-  const photos = allPhotos
-    .filter((photo) => {
-      // Filter out photos with invalid dimensions (1x1 pixels are corrupted/placeholder images)
-      return photo.width > 1 && photo.height > 1;
-    })
-    .map((photo, index) => {
-      // Normalize extremely large dimensions to reasonable display sizes
-      // Target max width of 800px while maintaining aspect ratio
-      const maxDisplayWidth = 800;
-      const maxDisplayHeight = 1200;
-      const aspectRatio = photo.width / photo.height;
-      
-      let displayWidth = photo.width;
-      let displayHeight = photo.height;
-      
-      // Scale down if width is too large
-      if (displayWidth > maxDisplayWidth) {
-        displayWidth = maxDisplayWidth;
-        displayHeight = Math.round(displayWidth / aspectRatio);
-      }
-      
-      // Also ensure height isn't too large
-      if (displayHeight > maxDisplayHeight) {
-        displayHeight = maxDisplayHeight;
-        displayWidth = Math.round(displayHeight * aspectRatio);
-      }
-      
-      return {
-        src: `https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/f_auto,q_auto/${photo.public_id}`,
-        width: displayWidth,
-        height: displayHeight,
-        alt: `Photo ${index + 1}`,
-        // Store original dimensions and metadata for reference
-        original: {
-          width: photo.width,
-          height: photo.height,
-          public_id: photo.public_id,
-          format: photo.format
-        }
-      };
-    });
-
   if (error) {
+    console.log('❌ ERROR STATE:', error);
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] p-8">
         <div className="text-red-600 text-lg font-semibold mb-2">
@@ -210,6 +242,7 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({ onPhotoClick }) => {
   }
 
   if (isLoading) {
+    console.log('⏳ LOADING STATE: Still loading initial data');
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-300"></div>
@@ -218,6 +251,15 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({ onPhotoClick }) => {
   }
 
   if (!photos.length) {
+    console.log('🚨 NO PHOTOS STATE:', {
+      allPhotosLength: allPhotos.length,
+      photosLength: photos.length,
+      dataPhotosLength: data?.photos?.length,
+      isLoading,
+      error,
+      hasMore,
+      nextCursor
+    });
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] p-8">
         <div className="text-gray-600 text-lg font-semibold mb-2">
@@ -230,41 +272,70 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({ onPhotoClick }) => {
     );
   }
 
+  console.log('✅ RENDERING GALLERY:', {
+    photosCount: photos.length,
+    allPhotosCount: allPhotos.length,
+    firstPhotoSrc: photos[0]?.src,
+    cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
+    hasMore,
+    isLoadingMore
+  });
+
   return (
     <div className="w-full">
+      {/* Refresh Detector - Ultra-aggressive loading on page refresh */}
+      <RefreshDetector 
+        publicIds={allPhotos.map(photo => photo.public_id)}
+      />
+      
+      {/* Viewport Image Loader - Force load images that would be visible */}
+      <ViewportImageLoader 
+        publicIds={allPhotos.map(photo => photo.public_id)}
+        columns={6}
+        targetRowHeight={480}
+      />
+      
+      {/* Aggressive Image Preloader - Load first 36 images immediately */}
+      <ImagePreloader 
+        publicIds={allPhotos.map(photo => photo.public_id)}
+        startIndex={0}
+        count={36}
+        priority={true}
+      />
+      
       {/* Smart Prefetcher */}
       <SmartPrefetcher 
         photos={allPhotos} 
         currentIndex={modalOpen ? currentPhotoIndex : 0}
-        prefetchRadius={5}
+        isModalOpen={modalOpen}
       />
       
-      {/* Elegant Photo Gallery Container */}
-      <div className="bg-white p-4 sm:p-6 lg:p-8">
+      {/* Clean Photo Gallery with Consistent Spacing */}
+      <div className="p-4">
         <PhotoAlbum
           layout="masonry"
           photos={photos}
-          spacing={6} // Slightly increased spacing for better visual separation
-          targetRowHeight={320} // Increased target height for better proportions with normalized dimensions
+          spacing={16}
+          targetRowHeight={480}
           onClick={handlePhotoClick}
-          renderPhoto={renderPhoto}
-          breakpoints={[640, 768, 1024, 1280, 1536]} // More granular breakpoints
+          render={{ photo: renderPhoto }}
+          breakpoints={[640, 768, 1024, 1280, 1536]}
           columns={(containerWidth) => {
-            if (containerWidth < 640) return 1; // Mobile: single column
-            if (containerWidth < 768) return 2; // Small tablet: 2 columns  
-            if (containerWidth < 1024) return 3; // Tablet: 3 columns
-            if (containerWidth < 1280) return 4; // Desktop: 4 columns
-            if (containerWidth < 1536) return 5; // Large desktop: 5 columns
-            return 6; // Extra large: 6 columns
+            if (containerWidth < 640) return 1;
+            if (containerWidth < 768) return 2;
+            if (containerWidth < 1024) return 3;
+            if (containerWidth < 1280) return 4;
+            if (containerWidth < 1536) return 5;
+            return 6;
           }}
           sizes={{
-            size: "calc(100vw - 240px)",
+            size: "calc(100vw - 48px)",
             sizes: [
-              { viewport: "(max-width: 640px)", size: "calc(100vw - 32px)" },
-              { viewport: "(max-width: 768px)", size: "calc(50vw - 24px)" },
-              { viewport: "(max-width: 1024px)", size: "calc(33.333vw - 20px)" },
-              { viewport: "(max-width: 1280px)", size: "calc(25vw - 18px)" },
-              { viewport: "(max-width: 1536px)", size: "calc(20vw - 16px)" },
+              { viewport: "(max-width: 640px)", size: "calc(100vw - 16px)" },
+              { viewport: "(max-width: 768px)", size: "calc(50vw - 12px)" },
+              { viewport: "(max-width: 1024px)", size: "calc(33.333vw - 10px)" },
+              { viewport: "(max-width: 1280px)", size: "calc(25vw - 8px)" },
+              { viewport: "(max-width: 1536px)", size: "calc(20vw - 6px)" },
             ],
           }}
         />

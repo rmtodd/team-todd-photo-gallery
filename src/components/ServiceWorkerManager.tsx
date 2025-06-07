@@ -157,21 +157,7 @@ const ServiceWorkerManager: React.FC<ServiceWorkerManagerProps> = ({ children })
         </div>
       )}
 
-      {/* Cache Management (Development/Debug) */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="fixed bottom-4 left-4 bg-gray-800 text-white rounded-lg p-3 text-xs z-40">
-          <div className="space-y-1">
-            <div>Cache Size: {formatBytes(cacheSize)}</div>
-            <div>Status: {isOnline ? '🟢 Online' : '🔴 Offline'}</div>
-            <button
-              onClick={clearCache}
-              className="bg-red-600 hover:bg-red-700 px-2 py-1 rounded text-xs mt-1"
-            >
-              Clear Cache
-            </button>
-          </div>
-        </div>
-      )}
+
     </>
   );
 };
