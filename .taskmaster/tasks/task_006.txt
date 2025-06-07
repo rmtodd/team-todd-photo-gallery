@@ -1,6 +1,6 @@
 # Task ID: 6
 # Title: Cloudinary Upload Widget Integration
-# Status: pending
+# Status: done
 # Dependencies: 2, 3
 # Priority: high
 # Description: Integrate Cloudinary Upload Widget for mobile-optimized photo uploads with support for multiple sources.

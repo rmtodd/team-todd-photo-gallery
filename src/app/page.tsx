@@ -2,7 +2,9 @@
 
 import { useAuth } from "@/contexts/AuthContext";
 import Navigation from "@/components/Navigation";
-import CloudinaryTest from "@/components/CloudinaryTest";
+import PhotoGallery from "@/components/PhotoGallery";
+import UploadWidget from "@/components/UploadWidget";
+import PerformanceStats from "@/components/PerformanceStats";
 import { useEffect, useState } from "react";
 
 export default function Home() {
@@ -59,43 +61,18 @@ export default function Home() {
           </p>
         </div>
 
-        {/* Gallery Preview */}
+        {/* Photo Gallery */}
         <div className="bg-white rounded-lg shadow-sm p-6">
           <h2 className="text-2xl font-bold mb-6 text-gray-900">
             Photo Gallery
           </h2>
           
-          {/* Cloudinary Integration Demo */}
-          <div className="mb-8">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">
-              Cloudinary Integration Test
-            </h3>
-            <CloudinaryTest />
-          </div>
-
-          {/* Placeholder for actual gallery */}
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center">
-            <div className="space-y-4">
-              <div className="mx-auto h-12 w-12 text-gray-400">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-              </div>
-              <div>
-                <h3 className="text-lg font-medium text-gray-900">
-                  Photo Gallery Coming Soon
-                </h3>
-                <p className="text-gray-500">
-                  The main photo gallery will be implemented in the next phase.
-                </p>
-                {permission === 'upload' && (
-                  <p className="text-sm text-indigo-600 mt-2">
-                    You can upload photos using the Upload page in the navigation.
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
+          <PhotoGallery 
+            onPhotoClick={(index, photos) => {
+              console.log('Photo clicked:', index, photos[index]);
+              // TODO: Implement modal view in next task
+            }}
+          />
         </div>
 
         {/* Feature Overview */}
@@ -143,6 +120,24 @@ export default function Home() {
           </div>
         </div>
       </main>
+
+      {/* Upload Widget - only shows for users with upload permission */}
+      <UploadWidget 
+        onSuccess={(result) => {
+          console.log('Upload success:', result);
+          // Refresh the page to show new photos in gallery
+          setTimeout(() => {
+            window.location.reload();
+          }, 1000); // Small delay to let the upload complete
+        }}
+        onFailure={(error) => {
+          console.error('Upload error:', error);
+          alert('Upload failed. Please try again.');
+        }}
+      />
+
+      {/* Performance Stats - shows optimization benefits */}
+      <PerformanceStats />
     </div>
   );
 }

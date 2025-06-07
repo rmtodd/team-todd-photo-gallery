@@ -10,6 +10,7 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
+    "test:api": "node scripts/test-api.js",
     "prepare": "husky"
   },
   "prettier": "./config/.prettierrc",
@@ -22,7 +23,10 @@
     "next": "15.3.3",
     "next-cloudinary": "^6.16.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "react-intersection-observer": "^9.16.0",
+    "react-photo-album": "^3.1.0",
+    "swr": "^2.3.3"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

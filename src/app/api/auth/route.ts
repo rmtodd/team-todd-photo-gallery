@@ -1,7 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server';
-import jwt from 'jsonwebtoken';
+import { authRateLimit } from '@/lib/rate-limit';
+import { createToken, getAuthFromRequest } from '@/lib/auth';
+
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    },
+  });
+}
 
 export async function POST(request: NextRequest) {
+  // Apply rate limiting
+  const rateLimitResult = authRateLimit(request);
+  if (!rateLimitResult.success) {
+    return NextResponse.json(
+      { 
+        error: 'Too many authentication attempts. Please try again later.',
+        resetTime: rateLimitResult.resetTime 
+      },
+      { 
+        status: 429,
+        headers: {
+          'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
+          'X-RateLimit-Reset': rateLimitResult.resetTime.toString(),
+        }
+      }
+    );
+  }
+
   try {
     const { password, action } = await request.json();
     
@@ -33,13 +63,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Create JWT token
-    const token = jwt.sign(
-      { 
-        permission,
-        exp: Math.floor(Date.now() / 1000) + (parseInt(process.env.SESSION_DURATION!) * 60 * 60) // Convert hours to seconds
-      },
-      process.env.JWT_SECRET!
-    );
+    const token = createToken(permission as 'upload' | 'view');
     
     const response = NextResponse.json({ 
       success: true, 
@@ -65,17 +89,15 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const authCookie = request.cookies.get('auth-token');
+    const user = getAuthFromRequest(request);
     
-    if (!authCookie?.value) {
+    if (!user) {
       return NextResponse.json({ authenticated: false });
     }
     
-    const decoded = jwt.verify(authCookie.value, process.env.JWT_SECRET!) as { permission: string };
-    
     return NextResponse.json({ 
       authenticated: true, 
-      permission: decoded.permission 
+      permission: user.permission 
     });
   } catch {
     return NextResponse.json({ authenticated: false });
