@@ -251,29 +251,32 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({ onPhotoClick }) => {
   }, [photos.length]);
 
   // Custom render function for optimized images with elegant styling
-  const renderPhoto = useCallback((props: RenderPhotoProps<TransformedPhoto>) => {
+  const renderPhoto = useCallback((props: RenderPhotoProps) => {
     // PhotoAlbum might pass props in different ways
     const { photo } = props;
     
+    // Type assertion for our transformed photo
+    const typedPhoto = photo as TransformedPhoto;
+    
     // Defensive checks for photo object
-    if (!photo || typeof photo !== 'object') {
+    if (!typedPhoto || typeof typedPhoto !== 'object') {
       console.warn('Invalid photo prop received:', props);
       return null;
     }
     
     // Check if it's an empty object
-    if (Object.keys(photo).length === 0) {
+    if (Object.keys(typedPhoto).length === 0) {
       console.warn('Empty photo object received');
       return null;
     }
     
     // Ensure required properties exist
-    if (!photo.src || !photo.width || !photo.height) {
-      console.warn('Photo missing required properties:', photo);
+    if (!typedPhoto.src || !typedPhoto.width || !typedPhoto.height) {
+      console.warn('Photo missing required properties:', typedPhoto);
       return null;
     }
     
-    const photoIndex = photo.index ?? 0;
+    const photoIndex = typedPhoto.index ?? 0;
     
     // Extract imageProps if available
     const imageProps = props?.imageProps || {};
@@ -291,10 +294,10 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({ onPhotoClick }) => {
         onClick={() => handlePhotoClick({ index: photoIndex })}
       >
         <OptimizedImage
-          publicId={photo.publicId}
-          alt={photo.alt || `Photo ${photoIndex}`}
-          width={photo.width}
-          height={photo.height}
+          publicId={typedPhoto.publicId}
+          alt={typedPhoto.alt || `Photo ${photoIndex}`}
+          width={typedPhoto.width}
+          height={typedPhoto.height}
           index={photoIndex}
           className="photo-image"
           style={{ 
