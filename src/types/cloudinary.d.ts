@@ -90,6 +90,6 @@ declare namespace cloudinary {
     width?: number;
     height?: number;
     format?: string;
-    [key: string]: any; // Allow other properties
+    [key: string]: unknown; // Allow other properties
   }
 } 

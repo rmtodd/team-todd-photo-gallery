@@ -81,6 +81,7 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
     return (
       <div className="relative w-full h-full">
         {/* Show blur placeholder while loading */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         {!imageLoaded && (
           <img
             src={optimizedBlurDataURL}
