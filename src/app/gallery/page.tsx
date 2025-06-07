@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
 
 export default function GalleryPage() {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { authenticated, loading, hasUploadPermission } = useAuth();
+  const { loading, hasUploadPermission, hasViewPermission } = useAuth();
 
   // Show loading state while checking authentication
   if (loading) {
@@ -22,8 +22,8 @@ export default function GalleryPage() {
     );
   }
 
-  // Redirect to login if not authenticated
-  if (!authenticated) {
+  // Redirect to login if user doesn't have view permission
+  if (!hasViewPermission()) {
     return (
       <div className="min-h-screen bg-white">
         <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
