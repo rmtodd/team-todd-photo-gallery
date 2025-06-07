@@ -10,7 +10,7 @@ interface UploadWidgetProps {
 
 declare global {
   interface Window {
-    cloudinary: any;
+    cloudinary: typeof cloudinary;
   }
 }
 

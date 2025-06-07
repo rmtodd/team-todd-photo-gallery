@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 'use client';
 
 import React, { useState } from 'react';
@@ -81,7 +82,6 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
     return (
       <div className="relative w-full h-full">
         {/* Show blur placeholder while loading */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         {!imageLoaded && (
           <img
             src={optimizedBlurDataURL}
@@ -92,7 +92,6 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
         )}
         
         {/* Main image */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={imageUrl}
           width={width}
