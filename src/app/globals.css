@@ -1,27 +1,63 @@
 @import "tailwindcss";
 
-:root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
-}
-
-@media (prefers-color-scheme: dark) {
+/* Reset any default backgrounds */
+@layer base {
   :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
+    --foreground-rgb: 0, 0, 0;
+    --background-start-rgb: 255, 255, 255;
+    --background-end-rgb: 255, 255, 255;
+    --tw-bg-opacity: 1;
+    --bg-color: transparent;
   }
-}
+  
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --foreground-rgb: 255, 255, 255;
+      --background-start-rgb: 0, 0, 0;
+      --background-end-rgb: 0, 0, 0;
+    }
+  }
+  
+  html {
+    background: #ffffff;
+    background-color: #ffffff;
+    margin: 0;
+    padding: 0;
+  }
 
-body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+  body {
+    color: rgb(var(--foreground-rgb));
+    background: #ffffff;
+    background-color: #ffffff;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Ensure main containers are white */
+  html, body, #__next, main {
+    background-color: rgba(255, 255, 255, var(--tw-bg-opacity));
+  }
+
+  /* Specific overrides for photo gallery containers */
+  .bg-white {
+    background-color: #ffffff !important;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    html {
+      background: #000000;
+      background-color: #000000;
+    }
+    
+    body {
+      background: #000000;
+      background-color: #000000;
+    }
+    
+    html, body, #__next, main {
+      background-color: rgba(0, 0, 0, var(--tw-bg-opacity));
+    }
+  }
 }
 
 /* Lazy loading image styles */
@@ -40,11 +76,21 @@ body {
   filter: blur(0px);
 }
 
+/* Ensure react-photo-album has white background */
+.react-photo-album,
+.react-photo-album--container,
+.react-photo-album--masonry {
+  background-color: #ffffff !important;
+  background: #ffffff !important;
+}
+
 /* Photo Gallery Hover Animations - Target react-photo-album structure */
 /* Target the masonry layout container */
 .react-photo-album--masonry {
   /* Ensure proper stacking context */
   position: relative;
+  background-color: #ffffff !important;
+  background: #ffffff !important;
 }
 
 /* Target individual photo containers in masonry layout */
@@ -70,14 +116,14 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transition: box-shadow 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  /* box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); */
+  /* transition: box-shadow 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94); */
   pointer-events: none;
   z-index: 1;
 }
 
 .react-photo-album--masonry .react-photo-album--photo:hover::after {
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2) !important;
+  /* box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2) !important; */
 }
 
 /* Target the image inside the photo container */
@@ -110,7 +156,7 @@ body {
 
 .photo-wrapper:hover {
   transform: translateY(-8px) scale(1.02) !important;
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15) !important;
+  /* box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15) !important; */
   z-index: 10 !important;
   overflow: hidden !important;
 }
@@ -121,4 +167,24 @@ body {
 
 .photo-wrapper:hover img {
   transform: scale(1.05) !important;
+}
+
+/* Force white on specific containers */
+[data-gallery-wrapper],
+[data-gallery-container] {
+  background-color: #ffffff !important;
+  background: #ffffff !important;
+}
+
+/* Ensure absolutely no filters or effects on the gallery */
+.react-photo-album,
+.react-photo-album--masonry,
+[data-gallery-wrapper],
+[data-gallery-container],
+main,
+body {
+  filter: none !important;
+  backdrop-filter: none !important;
+  -webkit-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }

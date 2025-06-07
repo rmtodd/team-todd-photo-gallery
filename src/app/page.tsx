@@ -41,9 +41,9 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white" style={{ backgroundColor: '#ffffff' }}>
       {/* Clean, edge-to-edge photo gallery extending to top */}
-      <main className="w-full">
+      <main className="w-full bg-white">
         <PhotoGallery />
       </main>
 

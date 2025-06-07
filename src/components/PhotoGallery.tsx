@@ -58,10 +58,21 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({ onPhotoClick }) => {
 
   // Set initial photos when data loads
   useEffect(() => {
-    if (data?.photos) {
+    if (data?.photos && Array.isArray(data.photos)) {
       const validPhotos = data.photos.filter((photo: CloudinaryPhoto) => 
-        photo.width > 1 && photo.height > 1
+        photo && 
+        photo.secure_url &&
+        photo.public_id &&
+        photo.width > 1 && 
+        photo.height > 1
       );
+      
+      console.log('Initial photos loaded:', {
+        totalReceived: data.photos.length,
+        validPhotos: validPhotos.length,
+        invalidPhotos: data.photos.length - validPhotos.length
+      });
+      
       setAllPhotos(validPhotos);
       setNextCursor(data.next_cursor || null);
       setHasMore(!!data.next_cursor);
@@ -70,14 +81,30 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({ onPhotoClick }) => {
 
   // Transform photos for PhotoAlbum when allPhotos changes
   useEffect(() => {
-    const transformedPhotos = allPhotos.map((photo, index) => ({
-      src: photo.secure_url,
-      width: photo.width,
-      height: photo.height,
-      alt: `Photo ${index + 1}`,
-      publicId: photo.public_id,
-      index,
-    }));
+    const transformedPhotos = allPhotos
+      .filter(photo => {
+        // Validate photo has all required properties
+        return photo && 
+               photo.secure_url && 
+               photo.width > 0 && 
+               photo.height > 0 &&
+               photo.public_id;
+      })
+      .map((photo, index) => ({
+        src: photo.secure_url,
+        width: photo.width,
+        height: photo.height,
+        alt: `Photo ${index + 1}`,
+        publicId: photo.public_id,
+        index,
+      }));
+    
+    console.log('Transformed photos:', {
+      originalCount: allPhotos.length,
+      transformedCount: transformedPhotos.length,
+      sample: transformedPhotos[0]
+    });
+    
     setPhotos(transformedPhotos);
   }, [allPhotos]);
 
@@ -85,8 +112,27 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({ onPhotoClick }) => {
   useEffect(() => {
     if (photos.length === 0) return;
 
-    // Wait a bit for PhotoAlbum to render
+    // Debug: Check computed background colors
     const timer = setTimeout(() => {
+      const body = document.body;
+      const bodyStyle = window.getComputedStyle(body);
+      console.log('Body background-color:', bodyStyle.backgroundColor);
+      
+      const galleryWrapper = document.querySelector('[data-gallery-wrapper]');
+      if (galleryWrapper) {
+        const wrapperStyle = window.getComputedStyle(galleryWrapper);
+        console.log('Gallery wrapper background-color:', wrapperStyle.backgroundColor);
+      }
+      
+      const photoAlbum = document.querySelector('.react-photo-album--masonry');
+      if (photoAlbum) {
+        const albumStyle = window.getComputedStyle(photoAlbum);
+        console.log('Photo album background-color:', albumStyle.backgroundColor);
+      }
+    }, 100);
+
+    // Wait a bit for PhotoAlbum to render
+    const hoverTimer = setTimeout(() => {
       const photoElements = document.querySelectorAll('[class*="photo"], [role="img"], img');
       console.log('Photo elements found:', photoElements.length);
       
@@ -116,7 +162,10 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({ onPhotoClick }) => {
       });
     }, 1000);
     
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(hoverTimer);
+    };
   }, [photos]);
 
   // Load more photos when scrolling
@@ -129,9 +178,25 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({ onPhotoClick }) => {
       if (!response.ok) throw new Error('Failed to load more photos');
       
       const newData = await response.json();
+      if (!newData.photos || !Array.isArray(newData.photos)) {
+        console.error('Invalid photos data received:', newData);
+        setHasMore(false);
+        return;
+      }
+      
       const validPhotos = newData.photos.filter((photo: CloudinaryPhoto) => 
-        photo.width > 1 && photo.height > 1
+        photo && 
+        photo.secure_url &&
+        photo.public_id &&
+        photo.width > 1 && 
+        photo.height > 1
       );
+      
+      console.log('More photos loaded:', {
+        totalReceived: newData.photos.length,
+        validPhotos: validPhotos.length,
+        invalidPhotos: newData.photos.length - validPhotos.length
+      });
       
       setAllPhotos(prev => [...prev, ...validPhotos]);
       setNextCursor(newData.next_cursor || null);
@@ -188,8 +253,20 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({ onPhotoClick }) => {
     const photo = props?.photo || props;
     
     // Defensive checks for photo object
-    if (!photo || !photo.src) {
-      console.error('Invalid photo object:', photo);
+    if (!photo || typeof photo !== 'object') {
+      console.warn('Invalid photo prop received:', props);
+      return null;
+    }
+    
+    // Check if it's an empty object
+    if (Object.keys(photo).length === 0) {
+      console.warn('Empty photo object received');
+      return null;
+    }
+    
+    // Ensure required properties exist
+    if (!photo.src || !photo.width || !photo.height) {
+      console.warn('Photo missing required properties:', photo);
       return null;
     }
     
@@ -221,6 +298,11 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({ onPhotoClick }) => {
             width: '100%',
             height: '100%',
             objectFit: 'cover',
+          }}
+          loading="lazy"
+          onError={(e) => {
+            console.error('Image failed to load:', photo.src);
+            e.currentTarget.style.display = 'none';
           }}
         />
       </div>
@@ -282,7 +364,7 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({ onPhotoClick }) => {
   });
 
   return (
-    <div className="w-full">
+    <div className="w-full bg-white" style={{ backgroundColor: '#ffffff' }}>
       {/* Refresh Detector - Ultra-aggressive loading on page refresh */}
       <RefreshDetector 
         publicIds={allPhotos.map(photo => photo.public_id)}
@@ -311,34 +393,37 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({ onPhotoClick }) => {
       />
       
       {/* Clean Photo Gallery with Consistent Spacing */}
-      <div className="p-4">
-        <PhotoAlbum
-          layout="masonry"
-          photos={photos}
-          spacing={16}
-          targetRowHeight={480}
-          onClick={handlePhotoClick}
-          render={{ photo: renderPhoto }}
-          breakpoints={[640, 768, 1024, 1280, 1536]}
-          columns={(containerWidth) => {
-            if (containerWidth < 640) return 1;
-            if (containerWidth < 768) return 2;
-            if (containerWidth < 1024) return 3;
-            if (containerWidth < 1280) return 4;
-            if (containerWidth < 1536) return 5;
-            return 6;
-          }}
-          sizes={{
-            size: "calc(100vw - 48px)",
-            sizes: [
-              { viewport: "(max-width: 640px)", size: "calc(100vw - 16px)" },
-              { viewport: "(max-width: 768px)", size: "calc(50vw - 12px)" },
-              { viewport: "(max-width: 1024px)", size: "calc(33.333vw - 10px)" },
-              { viewport: "(max-width: 1280px)", size: "calc(25vw - 8px)" },
-              { viewport: "(max-width: 1536px)", size: "calc(20vw - 6px)" },
-            ],
-          }}
-        />
+      <div style={{ backgroundColor: '#ffffff', width: '100%' }} data-gallery-wrapper="true">
+        <div className="p-4" style={{ backgroundColor: '#ffffff' }} data-gallery-container="true">
+          <PhotoAlbum
+            layout="masonry"
+            photos={photos}
+            spacing={16}
+            targetRowHeight={480}
+            onClick={handlePhotoClick}
+            render={{ photo: renderPhoto }}
+            breakpoints={[640, 768, 1024, 1280, 1536]}
+            columns={(containerWidth) => {
+              if (containerWidth < 640) return 1;
+              if (containerWidth < 768) return 2;
+              if (containerWidth < 1024) return 3;
+              if (containerWidth < 1280) return 4;
+              if (containerWidth < 1536) return 5;
+              return 6;
+            }}
+            sizes={{
+              size: "calc(100vw - 48px)",
+              sizes: [
+                { viewport: "(max-width: 640px)", size: "calc(100vw - 16px)" },
+                { viewport: "(max-width: 768px)", size: "calc(50vw - 12px)" },
+                { viewport: "(max-width: 1024px)", size: "calc(33.333vw - 10px)" },
+                { viewport: "(max-width: 1280px)", size: "calc(25vw - 8px)" },
+                { viewport: "(max-width: 1536px)", size: "calc(20vw - 6px)" },
+              ],
+            }}
+            style={{ backgroundColor: '#ffffff' }}
+          />
+        </div>
       </div>
       
       {/* Loading indicator for infinite scroll */}
