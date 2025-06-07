@@ -278,8 +278,7 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({ onPhotoClick }) => {
     
     const photoIndex = index;
     
-    // Extract onClick from props
-    const { onClick } = props;
+    // Props available but not currently used in our custom implementation
     
           return (
         <div
