@@ -251,9 +251,9 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({ onPhotoClick }) => {
   }, [photos.length]);
 
   // Custom render function for optimized images with elegant styling
-  const renderPhoto = useCallback((props: RenderPhotoProps) => {
-    // PhotoAlbum might pass props in different ways
-    const { photo } = props;
+  const renderPhoto = useCallback((props: RenderPhotoProps, context: { photo: TransformedPhoto; index: number; width: number; height: number }) => {
+    // PhotoAlbum passes photo data through context parameter
+    const { photo, index } = context;
     
     // Type assertion for our transformed photo
     const typedPhoto = photo as TransformedPhoto;
@@ -276,23 +276,21 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({ onPhotoClick }) => {
       return null;
     }
     
-    const photoIndex = typedPhoto.index ?? 0;
+    const photoIndex = index;
     
-    // Extract imageProps if available
-    const imageProps = props?.imageProps || {};
-    const wrapperStyle = props?.wrapperStyle || {};
+    // Extract onClick from props
+    const { onClick } = props;
     
-    return (
-      <div
-        className="photo-wrapper"
-        style={{
-          ...wrapperStyle,
-          cursor: 'pointer',
-          position: 'relative',
-          overflow: 'hidden',
-        }}
-        onClick={() => handlePhotoClick({ index: photoIndex })}
-      >
+          return (
+        <div
+          className="photo-wrapper"
+          style={{
+            cursor: 'pointer',
+            position: 'relative',
+            overflow: 'hidden',
+          }}
+          onClick={() => handlePhotoClick({ index: photoIndex })}
+        >
         <OptimizedImage
           publicId={typedPhoto.publicId}
           alt={typedPhoto.alt || `Photo ${photoIndex}`}
@@ -301,7 +299,6 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({ onPhotoClick }) => {
           index={photoIndex}
           className="photo-image"
           style={{ 
-            ...imageProps.style,
             pointerEvents: 'none',
             width: '100%',
             height: '100%',
