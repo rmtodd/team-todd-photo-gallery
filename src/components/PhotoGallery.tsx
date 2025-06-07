@@ -149,8 +149,8 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({ onPhotoClick }) => {
         // Add hover class handling
         container.addEventListener('mouseenter', (event) => {
           const target = event.currentTarget as HTMLElement;
-          target.style.transform = 'translateY(-4px) scale(1.01)';
-          target.style.boxShadow = '0 8px 16px rgba(0, 0, 0, 0.1)';
+          target.style.transform = 'translateY(-1px) scale(1.002)';
+          target.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.05)';
           target.style.zIndex = '10';
           target.style.overflow = 'hidden';
         });
@@ -240,15 +240,9 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({ onPhotoClick }) => {
   }, [scrollPosition]);
 
   // Handle navigation in modal
-  const handleNavigate = useCallback((direction: 'prev' | 'next') => {
-    setCurrentPhotoIndex(prev => {
-      if (direction === 'prev') {
-        return prev > 0 ? prev - 1 : photos.length - 1;
-      } else {
-        return prev < photos.length - 1 ? prev + 1 : 0;
-      }
-    });
-  }, [photos.length]);
+  const handleNavigate = useCallback((newIndex: number) => {
+    setCurrentPhotoIndex(newIndex);
+  }, []);
 
   // Custom render function for optimized images with elegant styling
   const renderPhoto = useCallback((props: RenderPhotoProps, context: { photo: TransformedPhoto; index: number; width: number; height: number }) => {
@@ -389,7 +383,7 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({ onPhotoClick }) => {
       <SmartPrefetcher 
         photos={allPhotos} 
         currentIndex={modalOpen ? currentPhotoIndex : 0}
-        isModalOpen={modalOpen}
+        prefetchRadius={5}
       />
       
       {/* Clean Photo Gallery with Consistent Spacing */}
@@ -399,7 +393,6 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({ onPhotoClick }) => {
             layout="masonry"
             photos={photos}
             spacing={16}
-            targetRowHeight={480}
             onClick={handlePhotoClick}
             render={{ photo: renderPhoto }}
             breakpoints={[640, 768, 1024, 1280, 1536]}
@@ -421,7 +414,6 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({ onPhotoClick }) => {
                 { viewport: "(max-width: 1536px)", size: "calc(20vw - 6px)" },
               ],
             }}
-            style={{ backgroundColor: '#ffffff' }}
           />
         </div>
       </div>
