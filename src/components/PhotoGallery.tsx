@@ -147,16 +147,16 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({ onPhotoClick }) => {
         el.style.transition = 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
         
         // Add hover class handling
-        container.addEventListener('mouseenter', function() {
-          const target = this as HTMLElement;
+        container.addEventListener('mouseenter', (event) => {
+          const target = event.currentTarget as HTMLElement;
           target.style.transform = 'translateY(-4px) scale(1.01)';
           target.style.boxShadow = '0 8px 16px rgba(0, 0, 0, 0.1)';
           target.style.zIndex = '10';
           target.style.overflow = 'hidden';
         });
         
-        container.addEventListener('mouseleave', function() {
-          const target = this as HTMLElement;
+        container.addEventListener('mouseleave', (event) => {
+          const target = event.currentTarget as HTMLElement;
           target.style.transform = '';
           target.style.boxShadow = '';
           target.style.zIndex = '';
