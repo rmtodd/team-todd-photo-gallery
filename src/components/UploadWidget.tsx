@@ -16,15 +16,15 @@ declare global {
 
 const UploadWidget: React.FC<UploadWidgetProps> = ({ onSuccess, onFailure }) => {
   const { hasUploadPermission } = useAuth();
-  const cloudinaryRef = useRef<typeof cloudinary>();
-  const widgetRef = useRef<cloudinary.UploadWidget>();
+  const cloudinaryRef = useRef<typeof cloudinary | null>(null);
+  const widgetRef = useRef<cloudinary.UploadWidget | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [uploadCount, setUploadCount] = useState(0);
 
   const initializeWidget = useCallback(() => {
     if (!cloudinaryRef.current) return;
     
-    widgetRef.current = cloudinaryRef.current.createUploadWidget(
+    widgetRef.current = cloudinaryRef.current!.createUploadWidget(
       {
         cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME!,
         uploadPreset: process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || 'team_todd_uploads',

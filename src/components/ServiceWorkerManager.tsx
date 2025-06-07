@@ -38,7 +38,7 @@ const ServiceWorkerManager: React.FC<ServiceWorkerManagerProps> = ({ children })
 
       // Register the service worker
       wb.register().then((registration) => {
-        setSwRegistration(registration);
+        setSwRegistration(registration || null);
         console.log('Service Worker registered successfully');
       }).catch((error) => {
         console.error('Service Worker registration failed:', error);

@@ -25,8 +25,8 @@ const nextConfig: NextConfig = {
   },
   // Enable experimental features for better performance
   experimental: {
-    // Optimize CSS loading
-    optimizeCss: true,
+    // Optimize CSS loading - disabled due to critters dependency issue
+    // optimizeCss: true,
   },
   // Turbopack configuration (stable in Next.js 15)
   turbopack: {

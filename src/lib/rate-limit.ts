@@ -16,7 +16,7 @@ export interface RateLimitConfig {
 
 export function rateLimit(config: RateLimitConfig) {
   return (request: NextRequest): { success: boolean; remaining: number; resetTime: number } => {
-    const ip = request.ip || request.headers.get('x-forwarded-for') || 'unknown';
+    const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
     const now = Date.now();
     
     // Clean up old entries
