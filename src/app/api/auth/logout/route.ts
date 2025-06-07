@@ -11,7 +11,7 @@ export async function OPTIONS() {
   });
 }
 
-export async function POST(request: NextRequest) {
+export async function POST() {
   try {
     const response = NextResponse.json({ 
       success: true, 

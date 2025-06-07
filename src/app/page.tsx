@@ -3,12 +3,12 @@
 import { useAuth } from "@/contexts/AuthContext";
 import PhotoGallery from "@/components/PhotoGallery";
 import UploadWidget from "@/components/UploadWidget";
-import Link from "next/link";
 
 // Force dynamic rendering to prevent caching issues with middleware authentication
 export const dynamic = 'force-dynamic';
 
 export default function Home() {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { authenticated, loading, hasUploadPermission } = useAuth();
 
   // Show loading state while checking authentication

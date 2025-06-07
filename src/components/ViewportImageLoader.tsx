@@ -47,7 +47,7 @@ const ViewportImageLoader: React.FC<ViewportImageLoaderProps> = ({
         ];
 
         const imagePromises = sizes.map(({ width, quality }) => {
-          return new Promise<void>((resolve, reject) => {
+          return new Promise<void>((resolve, _reject) => {
             const img = new Image();
             const params = [
               'f_auto',
@@ -70,8 +70,6 @@ const ViewportImageLoader: React.FC<ViewportImageLoaderProps> = ({
             if (isRightSide || index < 12) {
               img.fetchPriority = 'high';
             }
-            
-            const startTime = performance.now();
             
             img.onload = () => {
               resolve();

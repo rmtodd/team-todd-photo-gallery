@@ -10,7 +10,6 @@ interface ServiceWorkerManagerProps {
 const ServiceWorkerManager: React.FC<ServiceWorkerManagerProps> = ({ children }) => {
   const [isOnline, setIsOnline] = useState(true);
   const [updateAvailable, setUpdateAvailable] = useState(false);
-  const [cacheSize, setCacheSize] = useState<number>(0);
   const [swRegistration, setSwRegistration] = useState<ServiceWorkerRegistration | null>(null);
 
   useEffect(() => {
@@ -53,67 +52,17 @@ const ServiceWorkerManager: React.FC<ServiceWorkerManagerProps> = ({ children })
       });
     }
 
-    // Get initial cache size
-    getCacheSize();
-
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
   }, []);
 
-  const getCacheSize = async () => {
-    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-      try {
-        const messageChannel = new MessageChannel();
-        
-        messageChannel.port1.onmessage = (event) => {
-          if (event.data && typeof event.data.cacheSize === 'number') {
-            setCacheSize(event.data.cacheSize);
-          }
-        };
-
-        navigator.serviceWorker.controller.postMessage(
-          { type: 'GET_CACHE_SIZE' },
-          [messageChannel.port2]
-        );
-      } catch (error) {
-        console.error('Failed to get cache size:', error);
-      }
-    }
-  };
-
   const updateServiceWorker = () => {
     if (swRegistration && swRegistration.waiting) {
       swRegistration.waiting.postMessage({ type: 'SKIP_WAITING' });
       setUpdateAvailable(false);
     }
-  };
-
-  const clearCache = async () => {
-    if ('caches' in window) {
-      try {
-        const cacheNames = await caches.keys();
-        await Promise.all(
-          cacheNames.map(cacheName => caches.delete(cacheName))
-        );
-        setCacheSize(0);
-        console.log('All caches cleared');
-        
-        // Reload the page to get fresh content
-        window.location.reload();
-      } catch (error) {
-        console.error('Failed to clear cache:', error);
-      }
-    }
-  };
-
-  const formatBytes = (bytes: number): string => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
   return (

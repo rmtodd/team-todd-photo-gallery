@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 
 interface RefreshDetectorProps {
   publicIds: string[];
@@ -14,35 +14,7 @@ const RefreshDetector: React.FC<RefreshDetectorProps> = ({
   const hasDetectedRefresh = useRef(false);
   const isInitialLoad = useRef(true);
 
-  useEffect(() => {
-    // Detect if this is a refresh vs initial navigation
-    const detectRefresh = () => {
-      // Check if this is a refresh by looking at navigation timing
-      if (typeof window !== 'undefined' && window.performance) {
-        const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
-        
-        if (navigation) {
-          const isRefresh = navigation.type === 'reload';
-          const isBackForward = navigation.type === 'back_forward';
-          
-          if (isRefresh || isBackForward) {
-            hasDetectedRefresh.current = true;
-            onRefreshDetected?.();
-            implementUltraAggressiveLoading();
-          }
-        }
-      }
-      
-      isInitialLoad.current = false;
-    };
-
-    // Run detection after a short delay to ensure navigation timing is available
-    const timer = setTimeout(detectRefresh, 100);
-    
-    return () => clearTimeout(timer);
-  }, [onRefreshDetected]);
-
-  const implementUltraAggressiveLoading = () => {
+  const implementUltraAggressiveLoading = useCallback(() => {
     if (publicIds.length === 0) return;
     
     const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
@@ -121,7 +93,7 @@ const RefreshDetector: React.FC<RefreshDetectorProps> = ({
     const addPrefetchLinks = () => {
       const fragment = document.createDocumentFragment();
       
-      publicIds.slice(0, imagesToForceLoad).forEach((publicId, index) => {
+      publicIds.slice(0, imagesToForceLoad).forEach((publicId) => {
         // Add multiple sizes
         const sizes = [
           { width: 400, quality: 'auto:low' },
@@ -145,7 +117,35 @@ const RefreshDetector: React.FC<RefreshDetectorProps> = ({
     createHiddenImages();
     fetchImages();
     addPrefetchLinks();
-  };
+  }, [publicIds]);
+
+  useEffect(() => {
+    // Detect if this is a refresh vs initial navigation
+    const detectRefresh = () => {
+      // Check if this is a refresh by looking at navigation timing
+      if (typeof window !== 'undefined' && window.performance) {
+        const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
+        
+        if (navigation) {
+          const isRefresh = navigation.type === 'reload';
+          const isBackForward = navigation.type === 'back_forward';
+          
+          if (isRefresh || isBackForward) {
+            hasDetectedRefresh.current = true;
+            onRefreshDetected?.();
+            implementUltraAggressiveLoading();
+          }
+        }
+      }
+      
+      isInitialLoad.current = false;
+    };
+
+    // Run detection after a short delay to ensure navigation timing is available
+    const timer = setTimeout(detectRefresh, 100);
+    
+    return () => clearTimeout(timer);
+  }, [onRefreshDetected, implementUltraAggressiveLoading]);
 
   return null;
 };

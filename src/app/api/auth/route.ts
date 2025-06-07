@@ -107,7 +107,7 @@ export async function GET(request: NextRequest) {
 }
 
 // Development endpoint to clear rate limit store
-export async function DELETE(request: NextRequest) {
+export async function DELETE() {
   // Only allow in development environment
   if (process.env.NODE_ENV !== 'development') {
     return NextResponse.json({ error: 'Not available in production' }, { status: 403 });

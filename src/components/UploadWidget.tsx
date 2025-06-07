@@ -1,10 +1,17 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 
+interface UploadResultInfo {
+  // Define properties based on what you use from the result info
+  secure_url: string;
+  public_id: string;
+  [key: string]: any;
+}
+
 interface UploadWidgetProps {
-  onSuccess?: (result: any) => void;
+  onSuccess?: (result: UploadResultInfo) => void;
   onFailure?: (error: any) => void;
 }
 
@@ -16,46 +23,17 @@ declare global {
 
 const UploadWidget: React.FC<UploadWidgetProps> = ({ onSuccess, onFailure }) => {
   const { hasUploadPermission } = useAuth();
-  const cloudinaryRef = useRef<any>();
-  const widgetRef = useRef<any>();
+  const cloudinaryRef = useRef<typeof cloudinary>();
+  const widgetRef = useRef<cloudinary.UploadWidget>();
   const [isLoading, setIsLoading] = useState(false);
   const [uploadCount, setUploadCount] = useState(0);
 
-  // Only show upload button for users with upload permission
-  if (!hasUploadPermission()) {
-    return null;
-  }
-
-  useEffect(() => {
-    // Add Cloudinary script if not already loaded
-    if (!cloudinaryRef.current) {
-      const script = document.createElement('script');
-      script.src = 'https://upload-widget.cloudinary.com/global/all.js';
-      script.async = true;
-      document.body.appendChild(script);
-      
-      script.onload = () => {
-        cloudinaryRef.current = window.cloudinary;
-        initializeWidget();
-      };
-    } else {
-      initializeWidget();
-    }
-    
-    return () => {
-      // Clean up widget if component unmounts
-      if (widgetRef.current) {
-        widgetRef.current.destroy();
-      }
-    };
-  }, []);
-  
-  const initializeWidget = () => {
+  const initializeWidget = useCallback(() => {
     if (!cloudinaryRef.current) return;
     
     widgetRef.current = cloudinaryRef.current.createUploadWidget(
       {
-        cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
+        cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME!,
         uploadPreset: process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || 'team_todd_uploads',
         sources: [
           'local',
@@ -103,11 +81,11 @@ const UploadWidget: React.FC<UploadWidgetProps> = ({ onSuccess, onFailure }) => 
           { quality: 'auto', fetch_format: 'auto' }
         ]
       },
-      (error: any, result: any) => {
+      (error: any, result: cloudinary.UploadWidgetResult) => {
         if (!error && result && result.event === 'success') {
           console.log('Upload successful:', result.info);
           setUploadCount(prev => prev + 1);
-          if (onSuccess) onSuccess(result.info);
+          if (onSuccess) onSuccess(result.info as UploadResultInfo);
         }
         
         if (error) {
@@ -125,13 +103,45 @@ const UploadWidget: React.FC<UploadWidgetProps> = ({ onSuccess, onFailure }) => 
         }
       }
     );
-  };
+  }, [onSuccess, onFailure]);
   
+  useEffect(() => {
+    if (!hasUploadPermission()) {
+      return;
+    }
+    // Add Cloudinary script if not already loaded
+    if (!cloudinaryRef.current) {
+      const script = document.createElement('script');
+      script.src = 'https://upload-widget.cloudinary.com/global/all.js';
+      script.async = true;
+      document.body.appendChild(script);
+      
+      script.onload = () => {
+        cloudinaryRef.current = window.cloudinary;
+        initializeWidget();
+      };
+    } else {
+      initializeWidget();
+    }
+    
+    return () => {
+      // Clean up widget if component unmounts
+      if (widgetRef.current) {
+        widgetRef.current.destroy();
+      }
+    };
+  }, [hasUploadPermission, initializeWidget]);
+
   const openWidget = () => {
     if (widgetRef.current) {
       widgetRef.current.open();
     }
   };
+  
+  // Return null if user does not have permission - rendering is conditional
+  if (!hasUploadPermission()) {
+    return null;
+  }
   
   return (
     <>

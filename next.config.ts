@@ -3,16 +3,12 @@ import withPWA from 'next-pwa';
 
 const nextConfig: NextConfig = {
   images: {
-    // Use Cloudinary as the loader for optimal performance
-    loader: 'cloudinary',
-    path: `https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/`,
-    // Keep remote patterns as fallback
     remotePatterns: [
       {
         protocol: 'https',
         hostname: 'res.cloudinary.com',
         port: '',
-        pathname: '/team-todd/**',
+        pathname: `/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/**`,
       },
     ],
     formats: ['image/webp', 'image/avif'],

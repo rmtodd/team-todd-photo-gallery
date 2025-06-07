@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 // Force dynamic rendering to prevent caching issues with middleware authentication
@@ -26,8 +26,6 @@ function LoginForm() {
         },
         body: JSON.stringify({ password }),
       });
-
-      const data = await response.json();
 
       if (response.ok) {
         // Start the animation - go straight to "Team Todd ❤️"

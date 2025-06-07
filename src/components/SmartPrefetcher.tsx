@@ -9,6 +9,14 @@ interface SmartPrefetcherProps {
   prefetchRadius?: number;
 }
 
+interface NavigatorWithConnection extends Navigator {
+  connection?: {
+    effectiveType: 'slow-2g' | '2g' | '3g' | '4g';
+    addEventListener: (type: 'change', listener: EventListenerOrEventListenerObject) => void;
+    removeEventListener: (type: 'change', listener: EventListenerOrEventListenerObject) => void;
+  };
+}
+
 const SmartPrefetcher: React.FC<SmartPrefetcherProps> = ({
   photos,
   currentIndex = 0,
@@ -138,7 +146,7 @@ const SmartPrefetcher: React.FC<SmartPrefetcherProps> = ({
 
   // Network-aware prefetching
   useEffect(() => {
-    const connection = (navigator as Record<string, any>).connection;
+    const connection = (navigator as NavigatorWithConnection).connection;
     
     if (connection) {
       const handleConnectionChange = () => {

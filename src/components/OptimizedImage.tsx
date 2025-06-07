@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 import 'react-lazy-load-image-component/src/effects/blur.css';
 
@@ -10,7 +10,6 @@ interface OptimizedImageProps {
   width: number;
   height: number;
   priority?: boolean;
-  sizes?: string;
   className?: string;
   onClick?: () => void;
   quality?: number;
@@ -47,7 +46,6 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
   width,
   height,
   priority = false,
-  sizes = '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw',
   className = '',
   onClick,
   quality = 80,
@@ -59,7 +57,6 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
   style,
 }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
-  const [loadStartTime, setLoadStartTime] = useState<number>(0);
   
   // Generate optimized blur placeholder
   const optimizedBlurDataURL = blurDataURL || generateBlurPlaceholder(publicId);
@@ -70,12 +67,6 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
   // Be much more aggressive about immediate loading
   // Load first 24 images immediately (covers 4 rows in 6-column layout)
   const shouldLoadImmediately = priority || loading === 'eager' || index < 24;
-
-  useEffect(() => {
-    if (shouldLoadImmediately) {
-      setLoadStartTime(performance.now());
-    }
-  }, [shouldLoadImmediately, index, publicId]);
 
   const handleImageLoad = () => {
     setImageLoaded(true);
@@ -90,6 +81,7 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
     return (
       <div className="relative w-full h-full">
         {/* Show blur placeholder while loading */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         {!imageLoaded && (
           <img
             src={optimizedBlurDataURL}
@@ -100,6 +92,7 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
         )}
         
         {/* Main image */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={imageUrl}
           width={width}

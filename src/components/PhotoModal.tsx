@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSwipeable } from 'react-swipeable';
+import Image from 'next/image';
 import { CloudinaryPhoto } from '@/lib/cloudinary';
 
 interface PhotoModalProps {
@@ -136,11 +137,13 @@ const PhotoModal: React.FC<PhotoModalProps> = ({
             onDragEnd={() => {}}
             whileDrag={{ cursor: 'grabbing' }}
           >
-            <img
+            <Image
               src={photo.secure_url}
               alt={photo.context?.custom?.caption || `Photo ${currentIndex + 1}`}
               className="max-h-screen max-w-full object-contain select-none"
               draggable={false}
+              width={photo.width}
+              height={photo.height}
             />
           </motion.div>
 

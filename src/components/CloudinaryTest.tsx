@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 
 interface CloudinaryInfo {
   cloudName: string;
@@ -8,9 +9,13 @@ interface CloudinaryInfo {
   hasApiSecret: boolean;
 }
 
+interface Photo {
+  secure_url: string;
+}
+
 const CloudinaryTest = () => {
   const [info, setInfo] = useState<CloudinaryInfo | null>(null);
-  const [photos, setPhotos] = useState<any[]>([]);
+  const [photos, setPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -60,7 +65,7 @@ const CloudinaryTest = () => {
           <div className="text-sm">
             <p className="text-red-600">Error: {error}</p>
             <p className="text-gray-500 mt-1">
-              This might be because there are no photos uploaded yet, or there's a configuration issue.
+              This might be because there are no photos uploaded yet, or there&apos;s a configuration issue.
             </p>
           </div>
         ) : (
@@ -69,11 +74,13 @@ const CloudinaryTest = () => {
             {photos.length > 0 && (
               <div className="mt-2 grid grid-cols-3 gap-2">
                 {photos.slice(0, 3).map((photo, index) => (
-                  <img
+                  <Image
                     key={index}
                     src={photo.secure_url}
                     alt={`Test photo ${index + 1}`}
                     className="w-full h-20 object-cover rounded"
+                    width={80}
+                    height={80}
                   />
                 ))}
               </div>

@@ -1,34 +1,34 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import PhotoAlbum from 'react-photo-album';
+import PhotoAlbum, { RenderPhotoProps } from 'react-photo-album';
 import 'react-photo-album/styles.css'; // Required CSS for PhotoAlbum component
 import { useInView } from 'react-intersection-observer';
 import useSWR from 'swr';
 import { CloudinaryPhoto } from '@/lib/cloudinary';
-import OptimizedImage from './OptimizedImage';
 import PhotoModal from './PhotoModal';
 import SmartPrefetcher from './SmartPrefetcher';
 import ImagePreloader from './ImagePreloader';
 import ViewportImageLoader from './ViewportImageLoader';
 import RefreshDetector from './RefreshDetector';
+import OptimizedImage from './OptimizedImage';
 
 interface PhotoGalleryProps {
   onPhotoClick?: (index: number, photos: CloudinaryPhoto[]) => void;
 }
 
-interface PhotosResponse {
-  photos: CloudinaryPhoto[];
-  next_cursor?: string;
-  total_count: number;
-  page: number;
+interface TransformedPhoto {
+  src: string;
+  width: number;
+  height: number;
+  alt: string;
+  publicId: string;
+  index: number;
 }
-
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 const PhotoGallery: React.FC<PhotoGalleryProps> = ({ onPhotoClick }) => {
   const [allPhotos, setAllPhotos] = useState<CloudinaryPhoto[]>([]);
-  const [photos, setPhotos] = useState<any[]>([]);
+  const [photos, setPhotos] = useState<TransformedPhoto[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -140,24 +140,27 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({ onPhotoClick }) => {
       const containers = document.querySelectorAll('.react-photo-album--photo, [style*="cursor: pointer"]');
       console.log('Containers found:', containers.length);
       
-      containers.forEach((container: any) => {
+      containers.forEach((container: Element) => {
+        const el = container as HTMLElement;
         // Set initial styles to ensure consistency
-        container.style.overflow = 'hidden';
-        container.style.transition = 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+        el.style.overflow = 'hidden';
+        el.style.transition = 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
         
         // Add hover class handling
         container.addEventListener('mouseenter', function() {
-          this.style.transform = 'translateY(-4px) scale(1.01)';
-          this.style.boxShadow = '0 8px 16px rgba(0, 0, 0, 0.1)';
-          this.style.zIndex = '10';
-          this.style.overflow = 'hidden';
+          const target = this as HTMLElement;
+          target.style.transform = 'translateY(-4px) scale(1.01)';
+          target.style.boxShadow = '0 8px 16px rgba(0, 0, 0, 0.1)';
+          target.style.zIndex = '10';
+          target.style.overflow = 'hidden';
         });
         
         container.addEventListener('mouseleave', function() {
-          this.style.transform = '';
-          this.style.boxShadow = '';
-          this.style.zIndex = '';
-          this.style.overflow = 'hidden';
+          const target = this as HTMLElement;
+          target.style.transform = '';
+          target.style.boxShadow = '';
+          target.style.zIndex = '';
+          target.style.overflow = 'hidden';
         });
       });
     }, 1000);
@@ -248,9 +251,9 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({ onPhotoClick }) => {
   }, [photos.length]);
 
   // Custom render function for optimized images with elegant styling
-  const renderPhoto = useCallback((props: any) => {
+  const renderPhoto = useCallback((props: RenderPhotoProps<TransformedPhoto>) => {
     // PhotoAlbum might pass props in different ways
-    const photo = props?.photo || props;
+    const { photo } = props;
     
     // Defensive checks for photo object
     if (!photo || typeof photo !== 'object') {
@@ -287,10 +290,12 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({ onPhotoClick }) => {
         }}
         onClick={() => handlePhotoClick({ index: photoIndex })}
       >
-        <img
-          {...imageProps}
-          src={photo.src}
+        <OptimizedImage
+          publicId={photo.publicId}
           alt={photo.alt || `Photo ${photoIndex}`}
+          width={photo.width}
+          height={photo.height}
+          index={photoIndex}
           className="photo-image"
           style={{ 
             ...imageProps.style,
@@ -299,11 +304,7 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({ onPhotoClick }) => {
             height: '100%',
             objectFit: 'cover',
           }}
-          loading="lazy"
-          onError={(e) => {
-            console.error('Image failed to load:', photo.src);
-            e.currentTarget.style.display = 'none';
-          }}
+          onClick={() => handlePhotoClick({ index: photoIndex })}
         />
       </div>
     );
