@@ -15,6 +15,12 @@ import OptimizedImage from './OptimizedImage';
 
 interface PhotoGalleryProps {
   onPhotoClick?: (index: number, photos: CloudinaryPhoto[]) => void;
+  onRefreshNeeded?: () => void;
+}
+
+// Export the refresh function for external use
+export interface PhotoGalleryRef {
+  refreshGallery: () => Promise<void>;
 }
 
 interface TransformedPhoto {
@@ -51,10 +57,24 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({ onPhotoClick }) => {
   };
 
   // Initial data fetch
-  const { data, error, isLoading } = useSWR('/api/photos?limit=30', fetcher, {
-    revalidateOnFocus: false,
-    revalidateOnReconnect: false,
+  const { data, error, isLoading, mutate } = useSWR('/api/photos?limit=30', fetcher, {
+    revalidateOnFocus: true,
+    revalidateOnReconnect: true,
+    refreshInterval: 0, // Disable automatic polling
   });
+
+  // Function to refresh gallery data - defined AFTER mutate is available
+  const refreshGallery = useCallback(async () => {
+    console.log('🔄 Refreshing gallery data...');
+    try {
+      await mutate(); // Revalidate SWR cache
+      // Reset pagination state to fetch from beginning
+      setNextCursor(null);
+      setHasMore(true);
+    } catch (error) {
+      console.error('Error refreshing gallery:', error);
+    }
+  }, [mutate]);
 
   // Set initial photos when data loads
   useEffect(() => {
@@ -276,6 +296,7 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({ onPhotoClick }) => {
     
           return (
         <div
+          key={typedPhoto.publicId || `photo-${photoIndex}`}
           className="photo-wrapper"
           style={{
             cursor: 'pointer',

@@ -2,6 +2,7 @@
 
 import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import LottieAnimation from '@/components/LottieAnimation';
 
 // Force dynamic rendering to prevent caching issues with middleware authentication
 export const dynamic = 'force-dynamic';
@@ -33,10 +34,9 @@ function LoginForm() {
         
         // After a brief animation, navigate to gallery
         setTimeout(() => {
-          router.refresh();
           const from = searchParams.get('from');
-          // Always redirect to gallery after successful login
-          router.push(from === 'upload' ? '/upload' : '/gallery');
+          // Use window.location for a full page reload to ensure cookies are read
+          window.location.href = from === 'upload' ? '/upload' : '/gallery';
         }, 1500); // 1.5 seconds total
       } else {
         setLoading(false);
@@ -75,9 +75,6 @@ function LoginForm() {
   };
 
   const getDisplayText = () => {
-    if (showAnimation) {
-      return 'TEAM TODD ❤️';
-    }
     if (showError) {
       return '❌';
     }
@@ -86,7 +83,7 @@ function LoginForm() {
 
   const getInputType = () => {
     if (showAnimation || showError) {
-      return 'text'; // Show "TEAM TODD ❤️" or "❌" as plain text
+      return 'text'; // Show animation or "❌" as plain text
     }
     return 'password';
   };
@@ -94,27 +91,32 @@ function LoginForm() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-white">
       <div className="w-full max-w-xs">
-        <form onSubmit={handleSubmit}>
-          <input
-            type={getInputType()}
-            value={getDisplayText()}
-            onChange={(e) => {
-              if (!showAnimation && !showError) {
-                setPassword(e.target.value);
-              }
-            }}
-            className={`w-full px-3 py-2 text-base focus:outline-none text-center font-mono ${
-              showAnimation 
-                ? 'text-black font-semibold border-0' 
-                : showError
-                ? 'text-red-500 font-semibold border-2 border-red-300'
-                : 'text-gray-900 border-2 border-gray-300 focus:border-gray-300 transition-all duration-300'
-            }`}
-            placeholder=""
-            disabled={loading || showAnimation || showError}
-            autoFocus
-          />
-        </form>
+        {showAnimation ? (
+          <div className="flex items-center justify-center space-x-2">
+            <span className="text-base font-mono font-semibold text-black">TEAM TODD</span>
+            <LottieAnimation width={24} height={24} />
+          </div>
+        ) : (
+            <form onSubmit={handleSubmit}>
+              <input
+                type={getInputType()}
+                value={getDisplayText()}
+                onChange={(e) => {
+                  if (!showAnimation && !showError) {
+                    setPassword(e.target.value);
+                  }
+                }}
+                className={`w-full px-3 py-2 text-base focus:outline-none text-center font-mono ${
+                  showError
+                    ? 'text-red-500 font-semibold border-2 border-red-300'
+                    : 'text-gray-900 border-2 border-gray-300 focus:border-gray-300 transition-all duration-300'
+                }`}
+                placeholder=""
+                disabled={loading || showAnimation || showError}
+                autoFocus
+              />
+            </form>
+        )}
       </div>
     </div>
   );

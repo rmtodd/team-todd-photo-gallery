@@ -1,8 +1,9 @@
 'use client';
 
 import { useAuth } from "@/contexts/AuthContext";
-import PhotoGallery from "@/components/PhotoGallery";
+import PhotoGallery, { PhotoGalleryRef } from "@/components/PhotoGallery";
 import UploadWidget from "@/components/UploadWidget";
+import { useRef } from "react";
 
 // Force dynamic rendering to prevent caching issues with middleware authentication
 export const dynamic = 'force-dynamic';
@@ -10,6 +11,7 @@ export const dynamic = 'force-dynamic';
 export default function GalleryPage() {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { loading, hasUploadPermission, hasViewPermission } = useAuth();
+  const galleryRef = useRef<PhotoGalleryRef>(null);
 
   // Show loading state while checking authentication
   if (loading) {
@@ -49,12 +51,20 @@ export default function GalleryPage() {
 
       {/* Upload Widget - only shows for users with upload permission */}
       <UploadWidget 
-        onSuccess={(result) => {
+        onSuccess={async (result) => {
           console.log('Upload success:', result);
-          // Refresh the page to show new photos in gallery
-          setTimeout(() => {
+          // Try to refresh gallery data instead of full page reload
+          try {
+            // Small delay to ensure Cloudinary has processed the upload
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            // Force refresh the gallery
             window.location.reload();
-          }, 1000); // Small delay to let the upload complete
+          } catch (error) {
+            console.error('Error refreshing gallery:', error);
+            // Fallback to page reload if refresh fails
+            window.location.reload();
+          }
         }}
         onFailure={(error) => {
           console.error('Upload error:', error);
