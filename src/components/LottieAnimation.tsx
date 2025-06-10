@@ -2,12 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
-// Extend Window interface for dotLottie player
-declare global {
-  interface Window {
-    customElements: CustomElementRegistry;
-  }
-}
+// Note: customElements is already available in the global scope
 
 interface LottieAnimationProps {
   width?: number;

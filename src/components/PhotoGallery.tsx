@@ -64,7 +64,8 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({ onPhotoClick }) => {
   });
 
   // Function to refresh gallery data - defined AFTER mutate is available
-  const refreshGallery = useCallback(async () => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _refreshGallery = useCallback(async () => {
     console.log('🔄 Refreshing gallery data...');
     try {
       await mutate(); // Revalidate SWR cache

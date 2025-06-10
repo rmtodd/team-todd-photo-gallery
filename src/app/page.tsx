@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import LottieAnimation from '@/components/LottieAnimation';
 
 // Force dynamic rendering to prevent caching issues with middleware authentication
@@ -12,7 +12,6 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [showAnimation, setShowAnimation] = useState(false);
   const [showError, setShowError] = useState(false);
-  const router = useRouter();
   const searchParams = useSearchParams();
 
   const handleSubmit = async (e: React.FormEvent) => {

@@ -1,9 +1,8 @@
 'use client';
 
 import { useAuth } from "@/contexts/AuthContext";
-import PhotoGallery, { PhotoGalleryRef } from "@/components/PhotoGallery";
+import PhotoGallery from "@/components/PhotoGallery";
 import UploadWidget from "@/components/UploadWidget";
-import { useRef } from "react";
 
 // Force dynamic rendering to prevent caching issues with middleware authentication
 export const dynamic = 'force-dynamic';
@@ -11,7 +10,6 @@ export const dynamic = 'force-dynamic';
 export default function GalleryPage() {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { loading, hasUploadPermission, hasViewPermission } = useAuth();
-  const galleryRef = useRef<PhotoGalleryRef>(null);
 
   // Show loading state while checking authentication
   if (loading) {
