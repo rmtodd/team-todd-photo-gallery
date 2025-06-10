@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, Suspense, useEffect, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import LottieAnimation from '@/components/LottieAnimation';
 
@@ -13,6 +13,14 @@ function LoginForm() {
   const [showAnimation, setShowAnimation] = useState(false);
   const [showError, setShowError] = useState(false);
   const searchParams = useSearchParams();
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    // Focus input after component mounts
+    setTimeout(() => {
+      inputRef.current?.focus();
+    }, 100);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -92,12 +100,13 @@ function LoginForm() {
       <div className="w-full max-w-xs">
         {showAnimation ? (
           <div className="flex items-center justify-center space-x-2">
-            <span className="text-base font-mono font-semibold text-black">TEAM TODD</span>
+            <span className="text-xl font-mono font-semibold text-black">TEAM TODD</span>
             <LottieAnimation width={24} height={24} />
           </div>
         ) : (
             <form onSubmit={handleSubmit}>
               <input
+                ref={inputRef}
                 type={getInputType()}
                 value={getDisplayText()}
                 onChange={(e) => {

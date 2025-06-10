@@ -27,7 +27,7 @@ const LottieAnimation: React.FC<LottieAnimationProps> = ({
         stroke-miterlimit: 10;
         stroke: #7ac142;
         fill: none;
-        animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+        animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) forwards;
       }
       
       .checkmark {
@@ -39,14 +39,14 @@ const LottieAnimation: React.FC<LottieAnimationProps> = ({
         stroke: #fff;
         stroke-miterlimit: 10;
         box-shadow: inset 0px 0px 0px #7ac142;
-        animation: fill .4s ease-in-out .4s forwards, scale .3s ease-in-out .9s both;
+        animation: fill .2s ease-in-out .2s forwards, scale .2s ease-in-out .5s both;
       }
       
       .checkmark__check {
         transform-origin: 50% 50%;
         stroke-dasharray: 48;
         stroke-dashoffset: 48;
-        animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+        animation: stroke 0.2s cubic-bezier(0.65, 0, 0.45, 1) 0.4s forwards;
       }
       
       @keyframes stroke {
@@ -111,7 +111,7 @@ const LottieAnimation: React.FC<LottieAnimationProps> = ({
     >
       <svg className="checkmark" width={width} height={height} viewBox="0 0 52 52">
         <circle className="checkmark__circle" cx="26" cy="26" r="25" fill="none"/>
-        <path className="checkmark__check" fill="none" stroke="#7ac142" strokeWidth="2" d="M14,27 L22,35 L38,19"/>
+        <path className="checkmark__check" fill="none" stroke="#fff" strokeWidth="2" d="M14,27 L22,35 L38,19"/>
       </svg>
     </div>
   );
