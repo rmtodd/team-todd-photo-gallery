@@ -380,7 +380,7 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({ onPhotoClick }) => {
   });
 
   return (
-    <div className="w-full bg-white" style={{ backgroundColor: '#ffffff' }}>
+    <div className="w-full bg-white overflow-x-hidden" style={{ backgroundColor: '#ffffff', maxWidth: '100%' }}>
       {/* Refresh Detector - Ultra-aggressive loading on page refresh */}
       <RefreshDetector 
         publicIds={allPhotos.map(photo => photo.public_id)}
@@ -409,8 +409,8 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({ onPhotoClick }) => {
       />
       
       {/* Clean Photo Gallery with Consistent Spacing */}
-      <div style={{ backgroundColor: '#ffffff', width: '100%' }} data-gallery-wrapper="true">
-        <div className="p-4" style={{ backgroundColor: '#ffffff' }} data-gallery-container="true">
+      <div style={{ backgroundColor: '#ffffff', width: '100%', maxWidth: '100%', overflow: 'hidden' }} data-gallery-wrapper="true">
+        <div className="p-4" style={{ backgroundColor: '#ffffff', maxWidth: '100%' }} data-gallery-container="true">
           <PhotoAlbum
             layout="masonry"
             photos={photos}

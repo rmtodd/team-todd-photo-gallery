@@ -23,6 +23,8 @@
     background-color: #ffffff;
     margin: 0;
     padding: 0;
+    overflow-x: hidden;
+    max-width: 100%;
   }
 
   body {
@@ -31,11 +33,19 @@
     background-color: #ffffff;
     margin: 0;
     padding: 0;
+    overflow-x: hidden;
+    max-width: 100%;
+    position: relative;
   }
 
   /* Ensure main containers are white */
   html, body, #__next, main {
     background-color: rgba(255, 255, 255, var(--tw-bg-opacity));
+  }
+
+  /* Prevent any element from causing horizontal overflow */
+  * {
+    max-width: 100%;
   }
 
   /* Specific overrides for photo gallery containers */
