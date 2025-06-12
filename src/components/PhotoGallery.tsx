@@ -419,7 +419,7 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({ onPhotoClick }) => {
             render={{ photo: renderPhoto }}
             breakpoints={[640, 768, 1024, 1280, 1536]}
             columns={(containerWidth) => {
-              if (containerWidth < 640) return 1;
+              if (containerWidth < 640) return 2;
               if (containerWidth < 768) return 2;
               if (containerWidth < 1024) return 3;
               if (containerWidth < 1280) return 4;
@@ -429,7 +429,7 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({ onPhotoClick }) => {
             sizes={{
               size: "calc(100vw - 48px)",
               sizes: [
-                { viewport: "(max-width: 640px)", size: "calc(100vw - 16px)" },
+                { viewport: "(max-width: 640px)", size: "calc(50vw - 24px)" },
                 { viewport: "(max-width: 768px)", size: "calc(50vw - 12px)" },
                 { viewport: "(max-width: 1024px)", size: "calc(33.333vw - 10px)" },
                 { viewport: "(max-width: 1280px)", size: "calc(25vw - 8px)" },
